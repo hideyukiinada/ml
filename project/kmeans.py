@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 """
+Important Note: I'm still working on this file to make the result stable. Please hold off on using this yet.
+
 K-means clustering implementation.
 
 Reference
@@ -149,14 +151,14 @@ class KMeans():
                 mean = np.mean(observations[mask], axis=0)
                 centroid_positions[j] = mean
 
-                if first_run:
+            if first_run:
                     first_run = False
-                else:  # If observations are assigned to the same cluster as the last run, we consider that as convergence
+            else:  # If observations are assigned to the same cluster as the last run, we consider that as convergence
                     if np.array_equal(observation_assignment_to_centroids, prev_observation_assignment_to_centroids):
-                        log.debug("Converged. Iteration: %d" % (iter + 1))
+                        log.info("Converged. Iteration: %d" % (iter + 1))
                         convergence = True
                         break
-                prev_observation_assignment_to_centroids = observation_assignment_to_centroids.copy()
+            prev_observation_assignment_to_centroids = observation_assignment_to_centroids.copy()
 
         if convergence is False:
             raise NoConvergenceException("Cluster assignment did not converge.")
