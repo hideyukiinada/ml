@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 """
-Important Note: I'm still working on this file to make the result stable. Please hold off on using this yet.
-
 K-means clustering implementation.
+
+Notes
+-----
+As the below Wikipedia points out, there is no guarantee that this implementation finds the optimal clustering result.
 
 Reference
 ---------
@@ -30,7 +32,7 @@ class NoConvergenceException(Exception):
 def random_unique_choice(input_size, output_size):
     """
     Returns a subset of elements of an array consisting of elements that range from 0 to input_size-1.
-    For example, if input_array is 4 and size is 2, two unique numbers will be picked from [0, 1, 2, 3].
+    For example, if input_size is 4 and output_size is 2, two unique numbers will be picked from [0, 1, 2, 3].
 
     Parameters
     -----------
@@ -42,7 +44,7 @@ def random_unique_choice(input_size, output_size):
     Returns
     -------
     out: ndarray
-        Number of unique elements
+        Array of unique indices
 
     Notes
     -----
@@ -89,6 +91,9 @@ class KMeans():
         ValueError
             If len(observations.shape) != 2.
 
+        NoConvergenceException(Exception)
+            If convergence is not reached within the specified number of iterations.
+
         Notes
         -----
         Observation has to have exactly two axes (i.e. length of the shape):
@@ -99,13 +104,13 @@ class KMeans():
         [[1, 2, 3], [3, 4, 5]]) has the shape (2, 3) and length of the shape is 2.
         """
 
-        shape = observations.shape
+        shape = observations.shape  # e.g. (m, 2), (m, 3)
         shape_len = len(shape)
 
         if shape_len != 2:
             raise ValueError("Observation has to have exactly two axes such as [[1, 2, 3], [3, 4, 5]]")
 
-        num_observations = shape[0]
+        num_observations = shape[0]  # m
 
         # Initialize centroid positions
         #   Pick K observations randomly and assign them to centroid positions.
@@ -127,17 +132,18 @@ class KMeans():
             log.debug("Centroid positions:\n%s" % (str(centroid_positions)))
 
             # centroid to point distance
+            # For each observation, multiple columns are assigned.
+            # Each column holds the distance to each centroid from the observation on the row.
             d_table = np.zeros((num_observations, K))  # distance_between_centroid_to_observation_table
 
             # Calculate the distance from each observation to all centeroids.
-            # Put the result in separate columns per each centeroid.
             for j in range(K):
-                v = observations - centroid_positions[j]  # vector_from_centroid_to_each_observation
-                d = np.linalg.norm(v, axis=1)  # distance_between_centroid_and_each_observation
+                v = observations - centroid_positions[j]  # vector from centroid to each observation
+                d = np.linalg.norm(v, axis=1)  # distance between the centroid[j] and each observation
                 # Note: You need to leave 'd' as the 1-D vector.  The following will fail:
                 # tmp = d.reshape(1, (d.shape[0])) # Make it a row vector
                 # distance = np.transpose(tmp) # Transpose to a column vector
-                d_table[:, j] = d
+                d_table[:, j] = d  # Fill the column with the distance
 
                 log.debug("d_table:\n%s" % (str(d_table)))
 
@@ -146,18 +152,22 @@ class KMeans():
             log.debug("observation_assignment_to_centroids:\n%s" % (str(observation_assignment_to_centroids)))
 
             # for each set of observations belonging to the same cluster, calculate the average position
+            # We want to isolate a set of observation that belongs to cluster[k] for each iteration, and
+            # calculate the average position.
             for j in range(K):
-                mask = (observation_assignment_to_centroids == j)  # True means that the element belongs to the cluster
-                mean = np.mean(observations[mask], axis=0)
-                centroid_positions[j] = mean
+                indices_belonging_to_the_cluster = (
+                            observation_assignment_to_centroids == j)  # True means that the element belongs to the cluster
+                mean_position = np.mean(observations[indices_belonging_to_the_cluster], axis=0)
+                centroid_positions[j] = mean_position
 
             if first_run:
-                    first_run = False
+                first_run = False
             else:  # If observations are assigned to the same cluster as the last run, we consider that as convergence
-                    if np.array_equal(observation_assignment_to_centroids, prev_observation_assignment_to_centroids):
-                        log.info("Converged. Iteration: %d" % (iter + 1))
-                        convergence = True
-                        break
+                if np.array_equal(observation_assignment_to_centroids, prev_observation_assignment_to_centroids):
+                    log.info("Converged. Iteration: %d" % (iter + 1))
+                    convergence = True
+                    break
+
             prev_observation_assignment_to_centroids = observation_assignment_to_centroids.copy()
 
         if convergence is False:
