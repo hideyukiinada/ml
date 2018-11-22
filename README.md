@@ -10,4 +10,4 @@
 
 | File name | Note | |
 |---|---|---|
-| kmeans.py | An example for k-means clustering | ![sample](assets/images/k-means-demo.png)|
+| kmeans_example | An example for k-means clustering | ![sample](assets/images/k-means-demo.png)|
