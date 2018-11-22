@@ -4,7 +4,7 @@ K-means clustering implementation.
 
 Notes
 -----
-As the below Wikipedia points out, there is no guarantee that this implementation finds the optimal clustering result.
+As the below Wikipedia article points out, there is no guarantee that this implementation finds the optimal clustering result.
 
 Reference
 ---------

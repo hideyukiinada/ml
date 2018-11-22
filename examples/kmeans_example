@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+"""
+Example code to demo k-means.
+
+Notes
+-----
+As the below Wikipedia article points out, there is no guarantee that this implementation of k-means finds the optimal
+clustering result.
+
+Reference
+---------
+https://en.wikipedia.org/wiki/K-means_clustering
+
+__author__ = "Hide Inada"
+__copyright__ = "Copyright 2018, Hide Inada"
+__license__ = "The MIT License"
+__email__ = "hideyuki@gmail.com"
+"""
+import numpy as np
+import matplotlib.pyplot as plt
+
+from project.kmeans import KMeans
+
+# Configurable parameters
+NUM_DATA_POINTS = 360  # Number of data points in each set
+
+# Data for each set fall within the specified radius from the center below:
+CENTER_X = [0, 10, 5, 10, 0]  # X-coordinate of each circle.
+CENTER_Y = [0, 0, 5, 10, 10]  # Y-coordinate of each circle
+
+NUMBER_OF_CLUSTERS = 5  # Number of clusters to classify
+
+
+def random_filled_circle(center_x, center_y, radius, num_data_points):
+    """
+    Returns x, y coordinates of data points within the circle defined by the radius.
+
+    Parameters
+    -----------
+    center_x: float
+        x-coordinate of the center of the circle
+    center_y: float
+        y-coordinate of the center of the circle
+    radius: float
+        Radius of the circle
+    num_data_points: float
+        Number of data points
+
+    Returns
+    -------
+    x, y: ndarray
+        Array of x-coordinate and y-coordinate of the points
+    """
+
+    x = np.zeros((num_data_points))
+    y = np.zeros((num_data_points))
+
+    for i in range(num_data_points):
+        angle = 2 * np.pi * float(i) / num_data_points
+        r = np.random.rand() * radius
+        x[i] = center_x + r * np.cos(angle)
+        y[i] = center_y + r * np.sin(angle)
+
+    x2 = x.reshape(x.shape[0], 1)
+    y2 = y.reshape(y.shape[0], 1)
+
+    return x2, y2
+
+
+def example():
+    """An example to demonstrate how to use k-means.
+
+    Contains the code to:
+    - Randomly generate multiple sets of data.  Coordinates of data for each set is within a circle specified
+      in the argument to random_filled_circle.
+    - Once those sets are defined, pass the data to KMeans.clustering to auto-classify into clusters.
+    - Use matplotlib to create a scatter plot of the clusters.
+    """
+
+    num_clusters = len(CENTER_X)
+
+    for i in range(num_clusters):
+
+        x1, y1 = random_filled_circle(CENTER_X[i], CENTER_Y[i], 5., NUM_DATA_POINTS)
+        data_current = np.hstack((x1, y1))
+        if i == 0:
+            data = data_current
+        else:
+            data = np.concatenate((data, data_current))
+
+    K = NUMBER_OF_CLUSTERS
+    cluster_for_each_observation = KMeans.clustering(observations=data, K=K)
+
+    for j in range(K):
+        indices_of_observertion_in_cluster_j = (cluster_for_each_observation == j)
+        subset_data = data[indices_of_observertion_in_cluster_j]
+        x = subset_data[:, 0]
+        y = subset_data[:, 1]
+        plt.scatter(x, y, alpha=0.8)
+
+    plt.title("K-means demo")
+    plt.show()
+
+
+def main():
+    """Defines an application's main functionality"""
+    example()
+
+
+if __name__ == "__main__":
+    main()
