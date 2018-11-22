@@ -1,5 +1,4 @@
-# ml
-General code for machine learning
+# General code for machine learning
 
 # File list under the project directory
 
