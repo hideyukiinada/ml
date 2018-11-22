@@ -10,4 +10,4 @@
 
 | File name | Note | |
 |---|---|---|
-| kmeans_example | An example for k-means clustering | ![sample](assets/images/k-means-demo.png)|
+| kmeans_example | An example for k-means clustering with 5 clusters | ![sample](assets/images/k-means-demo.png)|
