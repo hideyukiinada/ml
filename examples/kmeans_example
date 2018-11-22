@@ -43,7 +43,7 @@ def random_filled_circle(center_x, center_y, radius, num_data_points):
         y-coordinate of the center of the circle
     radius: float
         Radius of the circle
-    num_data_points: float
+    num_data_points: int
         Number of data points
 
     Returns
