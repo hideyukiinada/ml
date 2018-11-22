@@ -80,7 +80,6 @@ def example():
     num_clusters = len(CENTER_X)
 
     for i in range(num_clusters):
-
         x1, y1 = random_filled_circle(CENTER_X[i], CENTER_Y[i], 5., NUM_DATA_POINTS)
         data_current = np.hstack((x1, y1))
         if i == 0:
