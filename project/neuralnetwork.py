@@ -125,7 +125,7 @@ class NeuralNetwork():
         Bias stored in matrix associated with each layer.
         Size of the vector is unit unit count of the current layer
     z: matrix
-        Affine tranformation applied to previous layer's activation
+        Affine transformation applied to previous layer's activation
         z = a.T w.  In this code, a is a matrix with each row holding all parameters for a single point.
         Therefore, z = a w is used.
     a: matrix
