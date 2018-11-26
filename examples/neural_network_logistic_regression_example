@@ -42,18 +42,6 @@ def example():
 
     nn = NeuralNetwork(model, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY)  # layer no: 0, 1, 2
 
-    # x = np.zeros((10, 2), dtype=np.float64)  # 5 set of 2 input.
-    # y = np.zeros((10, 1), dtype=np.float64)  # 5 set of 4 observations
-    #
-    # x[2, 0] = 1
-    # y[2] = 1
-    #
-    # x[4, 1] = 1
-    # y[4] = 1
-    #
-    # x[6, :] = 1
-    # y[6] = 1
-
     m = 1000
     r = np.random.rand(m) / 10.0
     r = np.abs(r)
@@ -73,13 +61,6 @@ def example():
     x[d,] = 1.0
     y[d,] = 1.0
 
-    # x[b,0] -= r[0:q,]
-    # x[c,1] -= r[q:2*q,]
-    # x[d,] -= r[2*q:3*q,]
-    # y[d,] -= r[3*q:,]
-
-    # print(x)
-    # sys.exit(1)
     nn.fit(x, y, epochs=200000, verbose=True, interval=1000)
 
     # predict
