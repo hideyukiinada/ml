@@ -8,8 +8,7 @@ I primarily learned the neural network algorithm from below sources:
 [ICL] Imperial College London, Mathematics for Machine Learning Specialization, https://www.coursera.org/specializations/mathematics-machine-learning
 [DA] deeplearning.ai, Deep Learning Specialization, https://www.coursera.org/specializations/deep-learning
 [IG] Ian Goodfellow, Yoshua Bengio and Aaron Courville, Deep Learning, MIT Press, 2016
-
-bibtex entry:
+bibtex entry for the [IG] above:
 @book{Goodfellow-et-al-2016,
     title={Deep Learning},
     author={Ian Goodfellow and Yoshua Bengio and Aaron Courville},
@@ -52,12 +51,12 @@ class Layer():
 
     def num_units(self):
         """
-        Provides access to number of units for the layer.
+        Provides access to number of units on the layer.
 
         Returns
         -------
         out: int
-            Number of units for the layer
+            Number of units on the layer
         """
         return self._num_units
 
