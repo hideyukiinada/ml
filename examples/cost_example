@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+"""
+Example code to demo CostFunction class.
+
+__author__ = "Hide Inada"
+__copyright__ = "Copyright 2018, Hide Inada"
+__license__ = "The MIT License"
+__email__ = "hideyuki@gmail.com"
+"""
+
+import numpy as np
+from project.costfunction import CostFunction as cf
+
+
+def logistic_regression_cost_examples():
+    """
+    Logistic regression cost examples
+    """
+    print("Logistic regression cost function")
+    print("y==y_hat")
+    y = np.array([0., 0.25, 0.5, 0.75, 1])
+    y_hat = np.array([0., 0.25, 0.5, 0.75, 1.])
+
+    j = cf.logistic_regression_mean_cost(y, y_hat)
+
+    for i in range(j.shape[0]):
+        print("y: %.2f, y_hat:%.2f, cost:%.2f" % (y[i], y_hat[i], j[i]))
+
+    # y != y hat.  y hat is 0 or 1.
+    print("y != y_hat")
+    y = np.array([0., 1.])
+    y_hat = np.array([1., 0.])
+
+    j = cf.logistic_regression_mean_cost(y, y_hat)
+
+    for i in range(j.shape[0]):
+        print("y: %.2f, y_hat:%.2f, cost:%.2f" % (y[i], y_hat[i], j[i]))
+
+    # y != y hat.  y hat: 0 < y hat < 0
+    print("y != y_hat (0 < y_hat <1)")
+    y = np.array([1., 0.])
+    y_hat = np.array([0.1, 0.9])
+
+    j = cf.logistic_regression_mean_cost(y, y_hat)
+
+    for i in range(j.shape[0]):
+        print("y: %.2f, y_hat:%.2f, cost:%.2f" % (y[i], y_hat[i], j[i]))
+
+
+def mean_squared_error_examples():
+    """
+    MSE examples
+    """
+    print("MSE function")
+    print("y==y_hat")
+    y = np.array([0., 0.25, 0.5, 0.75, 1])
+    y_hat = np.array([0., 0.25, 0.5, 0.75, 1.])
+
+    j = cf.squared_error(y, y_hat)
+
+    for i in range(j.shape[0]):
+        print("y: %.2f, y_hat:%.2f, cost:%.2f" % (y[i], y_hat[i], j[i]))
+
+    # y != y hat.  y hat is 0 or 1.
+    print("y != y_hat")
+    y = np.array([0., 1.])
+    y_hat = np.array([1., 0.])
+
+    j = cf.squared_error(y, y_hat)
+
+    for i in range(j.shape[0]):
+        print("y: %.2f, y_hat:%.2f, cost:%.2f" % (y[i], y_hat[i], j[i]))
+
+    # y != y hat.  y hat: 0 < y hat < 0
+    print("y != y_hat (0 < y_hat <1)")
+    y = np.array([1., 0.])
+    y_hat = np.array([0.1, 0.9])
+
+    j = cf.squared_error(y, y_hat)
+
+    for i in range(j.shape[0]):
+        print("y: %.2f, y_hat:%.2f, cost:%.2f" % (y[i], y_hat[i], j[i]))
+
+    # y != y hat.  y > 1, y hat > 1
+    print("y != y hat.  y > 1, y hat > 1")
+    y = np.array([5.0, 6.0])
+    y_hat = np.array([2.0, 10.0])
+
+    j = cf.squared_error(y, y_hat)
+
+    for i in range(j.shape[0]):
+        print("y: %.2f, y_hat:%.2f, cost:%.2f" % (y[i], y_hat[i], j[i]))
+
+    j = cf.mean_squared_error(y, y_hat)
+    print("Mean squared error: %.2f" % (j))
+
+    print("Derivatives")
+    j = cf.d_squared_error(y, y_hat)
+    for i in range(j.shape[0]):
+        print("y: %.2f, y_hat:%.2f, cost:%.2f" % (y[i], y_hat[i], j[i]))
+
+
+def main():
+    """Example code"""
+    # logistic_regression_cost_examples()
+    mean_squared_error_examples()
+
+
+if __name__ == "__main__":
+    main()

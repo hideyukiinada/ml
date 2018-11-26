@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+"""
+Example code to demo logistic regression using NeuralNetwork class.
+
+__author__ = "Hide Inada"
+__copyright__ = "Copyright 2018, Hide Inada"
+__license__ = "The MIT License"
+__email__ = "hideyuki@gmail.com"
+"""
+
+import os
+import logging
+
+import numpy as np
+import matplotlib.pyplot as plt
+import sys
+from project.neuralnetwork import NeuralNetwork
+from project.neuralnetwork import NeuralNetwork
+from project.neuralnetwork import Model
+from project.neuralnetwork import Layer
+from project.activationfunction import ActivationFunction as af
+from project.costfunction import CostFunction as cf
+
+log = logging.getLogger(__name__)
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
+
+
+def example():
+    """An example to demonstrate how to use k-means.
+
+    Contains the code to:
+    - Randomly generate multiple sets of data.  Coordinates of data for each set is within a circle specified
+      in the argument to random_filled_circle.
+    - Once those sets are defined, pass the data to KMeans.clustering to auto-classify into clusters.
+    - Use matplotlib to create a scatter plot of the clusters.
+    """
+
+    model = Model(num_input=2)
+    model.add(Layer(5, activation=af.RELU))
+    model.add(Layer(4, activation=af.RELU))
+    model.add(Layer(1, activation=af.SIGMOID))
+
+    nn = NeuralNetwork(model, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY)  # layer no: 0, 1, 2
+
+    # x = np.zeros((10, 2), dtype=np.float64)  # 5 set of 2 input.
+    # y = np.zeros((10, 1), dtype=np.float64)  # 5 set of 4 observations
+    #
+    # x[2, 0] = 1
+    # y[2] = 1
+    #
+    # x[4, 1] = 1
+    # y[4] = 1
+    #
+    # x[6, :] = 1
+    # y[6] = 1
+
+    m = 1000
+    r = np.random.rand(m) / 10.0
+    r = np.abs(r)
+    r = r.reshape((m, 1))
+
+    x = np.zeros((m, 2)) + r
+    y = np.zeros((m, 1))
+
+    a = np.arange(0, m, 4)  # array([ 0.,  4.,  8., ..., 996])
+    b = np.arange(1, m, 4)
+    c = np.arange(2, m, 4)
+    d = np.arange(3, m, 4)
+
+    q = int(m / 4.0)
+    x[b, 0] = 1.0
+    x[c, 1] = 1.0
+    x[d,] = 1.0
+    y[d,] = 1.0
+
+    # x[b,0] -= r[0:q,]
+    # x[c,1] -= r[q:2*q,]
+    # x[d,] -= r[2*q:3*q,]
+    # y[d,] -= r[3*q:,]
+
+    # print(x)
+    # sys.exit(1)
+    nn.fit(x, y, epochs=200000, verbose=True, interval=1000)
+
+    # predict
+    x_test = np.array([[0.02, 0.03], [0.1, 1], [1, 0.02], [1, 1]])
+
+    y_hat = nn.predict(x_test)
+    print(y_hat)
+
+
+def main():
+    """Defines an application's main functionality"""
+    example()
+
+
+if __name__ == "__main__":
+    main()

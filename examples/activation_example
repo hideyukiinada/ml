@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+"""
+Example code to demo ActivationFunction class.
+
+__author__ = "Hide Inada"
+__copyright__ = "Copyright 2018, Hide Inada"
+__license__ = "The MIT License"
+__email__ = "hideyuki@gmail.com"
+"""
+
+import numpy as np
+from project.activationfunction import ActivationFunction
+
+
+def main():
+    """Example code"""
+
+    def pair_up_as_col_vectors(x, y):
+        v = np.hstack((x.reshape((x.shape[0], 1)), y.reshape((y.shape[0], 1))))
+        return v
+
+    # sigmoid
+    print("sigmoid")
+    x = np.array([-10, 0, 10, 100])
+    y = ActivationFunction.sigmoid(x)
+
+    x_y = pair_up_as_col_vectors(x, y)
+    for i in range(x_y.shape[0]):
+        print("Input: %.2f, Output:%.2f" % (x_y[i, 0], x_y[i, 1]))
+
+    # d_sigmoid
+    print("d_sigmoid")
+    x = np.array([-10, 0, 10, 100])
+    y = ActivationFunction.d_sigmoid(x)
+
+    x_y = pair_up_as_col_vectors(x, y)
+    for i in range(x_y.shape[0]):
+        print("Input: %.2f, Output:%.2f" % (x_y[i, 0], x_y[i, 1]))
+
+    # ReLU
+    print("relu")
+    x = np.array([-10, 0, 10])
+    y = ActivationFunction.relu(x)
+
+    x_y = pair_up_as_col_vectors(x, y)
+    for i in range(x_y.shape[0]):
+        print("Input: %.2f, Output:%.2f" % (x_y[i, 0], x_y[i, 1]))
+
+    # dReLU
+    print("d_relu")
+    x = np.array([-10, 0, 10])
+    y = ActivationFunction.d_relu(x)
+
+    x_y = pair_up_as_col_vectors(x, y)
+    for i in range(x_y.shape[0]):
+        print("Input: %.2f, Output:%.2f" % (x_y[i, 0], x_y[i, 1]))
+
+
+if __name__ == "__main__":
+    main()
