@@ -12,7 +12,6 @@ import os
 import logging
 
 import numpy as np
-import matplotlib.pyplot as plt
 import sys
 
 import keras
@@ -30,13 +29,9 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd 
 
 
 def example():
-    """An example to demonstrate how to use k-means.
+    """An example to show how to use NeuralNetwork class.
 
-    Contains the code to:
-    - Randomly generate multiple sets of data.  Coordinates of data for each set is within a circle specified
-      in the argument to random_filled_circle.
-    - Once those sets are defined, pass the data to KMeans.clustering to auto-classify into clusters.
-    - Use matplotlib to create a scatter plot of the clusters.
+    This file downloads MNIST data via Keras util, but does not use Keras functionality for neural network.
     """
 
     # Download mnist data via Keras API
@@ -48,15 +43,8 @@ def example():
 
     # Flatten
     x_flat = x.reshape((x.shape[0], 28*28))
-
-    #x_flat = x_flat[0:4,] # tmp
-
     x_test_flat = x_test.reshape((x_test.shape[0], 28*28))
-
     y_oh = keras.utils.to_categorical(y, 10) * 1.0
-
-    #y_oh = y_oh[0:4,] # tmp
-
     y_test_oh = keras.utils.to_categorical(y_test, 10)
 
     model = Model(num_input=28*28)
@@ -80,14 +68,8 @@ def example():
         print("y: %d, y_hat_adj: %d, y_hat: %s" % (y_test[i], adjusted_y_hat[i], str(y_hat[i])))
 
     matched_indices = (adjusted_y_hat == y_test)
-
     matched_count = y_test[matched_indices].shape[0]
-
     print("Matched: %d out of Total: %d (%f percent)" % (matched_count, total_size, matched_count*100/total_size))
-
-
-    #print(y_hat)
-
 
 def main():
     """Defines an application's main functionality"""

@@ -26,18 +26,11 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd 
 
 
 def example():
-    """An example to demonstrate how to use k-means.
-
-    Contains the code to:
-    - Randomly generate multiple sets of data.  Coordinates of data for each set is within a circle specified
-      in the argument to random_filled_circle.
-    - Once those sets are defined, pass the data to KMeans.clustering to auto-classify into clusters.
-    - Use matplotlib to create a scatter plot of the clusters.
+    """An example to demonstrate how to use NeuralNetwork class.
     """
 
     model = Model(num_input=2)
     model.add(Layer(5, activation=af.RELU))
-    # model.add(Layer(4, activation=af.RELU))
     model.add(Layer(1, activation=af.SIGMOID))
 
     nn = NeuralNetwork(model, learning_rate=1e-2, cost_function=cf.CROSS_ENTROPY)  # layer no: 0, 1, 2
@@ -61,7 +54,7 @@ def example():
     x[d,] = 1.0
     y[d,] = 1.0
 
-    nn.fit(x, y, epochs=200000, verbose=True, interval=1000)
+    nn.fit(x, y, epochs=20000, verbose=True, interval=1000)
 
     # predict
     x_test = np.array([[0.02, 0.03], [0.1, 1], [1, 0.02], [1, 1]])
