@@ -4,7 +4,7 @@
 
 | File name | Note | |
 |---|---|---|
-| neuralnetwork.py | Implementation of a plain-vanilla neural network | |
+| neuralnetwork.py | Implementation of a plain-vanilla neural network built from scratch with numpy | |
 | activationfunction.py | Implementation of activation functions for neural network | |
 | costfunction.py | Implementation of cost functions for neural network including cross-entropy & MSE | |
 | kmeans.py | Implementation of k-means clustering method. Notes: As the below Wikipedia article points out, there is no guarantee that this implementation finds the optimal clustering result. https://en.wikipedia.org/wiki/K-means_clustering | |
