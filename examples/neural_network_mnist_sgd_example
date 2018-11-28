@@ -53,9 +53,9 @@ def example():
     model.add(Layer(128, activation=af.RELU))
     model.add(Layer(10, activation=af.SIGMOID))
 
-    nn = NeuralNetwork(model, learning_rate=0.01, cost_function=cf.CROSS_ENTROPY)  # layer no: 0, 1, 2
+    nn = NeuralNetwork(model, learning_rate=0.0001, cost_function=cf.CROSS_ENTROPY, optimizer=opt.SGD)  # layer no: 0, 1, 2
 
-    nn.fit(x_flat, y_oh, epochs=2000, verbose=True, interval=1)
+    nn.fit(x_flat, y_oh, epochs=4, verbose=True, interval=1)
 
     # predict
     y_hat_oh = nn.predict(x_test_flat)

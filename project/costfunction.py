@@ -91,8 +91,8 @@ class CostFunction():
             Derivative of cost for each prediction
         """
 
-        # y_hat_adj = np.clip(y_hat, a_min=epsilon, a_max=(1 - epsilon))
-        y_hat_adj = y_hat
+        y_hat_adj = np.clip(y_hat, a_min=epsilon, a_max=(1 - epsilon))
+        #y_hat_adj = y_hat # commenting out due to an error found in SGD
         d = - ( (y / y_hat_adj) - (1.0 - y) / (1.0 - y_hat_adj) )
         return d
 

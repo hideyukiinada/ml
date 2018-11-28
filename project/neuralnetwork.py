@@ -36,6 +36,7 @@ import numpy as np
 
 from .activationfunction import ActivationFunction as af
 from .costfunction import CostFunction as cf
+from .optimizer import Optimizer as opt
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
@@ -176,7 +177,7 @@ class NeuralNetwork():
             self.bias.append(b)
             self.gradient_bias.append(np.zeros(b.shape))
 
-    def __init__(self, model, cost_function=cf.MEAN_SQUARED_ERROR, learning_rate=0.001):
+    def __init__(self, model, cost_function=cf.MEAN_SQUARED_ERROR, learning_rate=0.001, optimizer=opt.BATCH):
         """
         Initialize the class.
 
@@ -190,6 +191,7 @@ class NeuralNetwork():
         """
 
         self.model = model
+        self.optimizer = optimizer
         self.cost_function = cost_function
         self.learning_rate = learning_rate
         self.num_layers = len(model.layers()) - 1  # To exclude the input layer
@@ -375,21 +377,45 @@ class NeuralNetwork():
             Number of epochs to show the cost if verbose is set to true
         """
 
-        self.dataset_size = x.shape[0]
+        if self.optimizer == opt.SGD:
+            self.dataset_size = 1
 
-        for i in range(epochs):
-            y_hat = self._forward_prop(x)
+            for i in range(epochs):
+                for j in range(x.shape[0]):
+                    x_one = x[j:j+1]
+                    y_one = y[j:j+1]
+                    y_hat = self._forward_prop(x_one)
 
-            if verbose:
-                if self.cost_function == cf.CROSS_ENTROPY:
-                    cost = cf.mean_cross_entropy(y, y_hat)
-                elif self.cost_function == cf.MEAN_SQUARED_ERROR:
-                    cost = cf.mean_squared_error(y, y_hat)
+                    if verbose:
+                        if self.cost_function == cf.CROSS_ENTROPY:
+                            cost = cf.mean_cross_entropy(y_one, y_hat)
+                        elif self.cost_function == cf.MEAN_SQUARED_ERROR:
+                            cost = cf.mean_squared_error(y_one, y_hat)
 
-                if ((i+1) % interval == 0):
-                    print("[%d/%d epochs] Cost: %.07f" % (i+1, epochs, cost))
+                    self._backprop(x_one, y_one, y_hat)
 
-            self._backprop(x, y, y_hat)
+                    if(j%100 == 0):
+                        print("[%d %d/%d epochs] Cost: %.07f" % (j, i + 1, epochs, cost))
+
+                if ((i + 1) % interval == 0):
+                    print("[%d/%d epochs] Cost: %.07f" % (i + 1, epochs, cost))
+
+        else: # Batch gradient
+            self.dataset_size = x.shape[0]
+
+            for i in range(epochs):
+                y_hat = self._forward_prop(x)
+
+                if verbose:
+                    if self.cost_function == cf.CROSS_ENTROPY:
+                        cost = cf.mean_cross_entropy(y, y_hat)
+                    elif self.cost_function == cf.MEAN_SQUARED_ERROR:
+                        cost = cf.mean_squared_error(y, y_hat)
+
+                    if ((i+1) % interval == 0):
+                        print("[%d/%d epochs] Cost: %.07f" % (i+1, epochs, cost))
+
+                self._backprop(x, y, y_hat)
 
     # Partial derivatives
     def derivative_j_wrt_a(self, y, y_hat, cost_function):
