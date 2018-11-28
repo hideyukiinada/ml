@@ -386,8 +386,8 @@ class NeuralNetwork():
                 elif self.cost_function == cf.MEAN_SQUARED_ERROR:
                     cost = cf.mean_squared_error(y, y_hat)
 
-                if (i % interval == 0):
-                    print(cost)
+                if ((i+1) % interval == 0):
+                    print("[%d/%d epochs] Cost: %.07f" % (i+1, epochs, cost))
 
             self._backprop(x, y, y_hat)
 
