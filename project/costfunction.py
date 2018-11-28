@@ -44,7 +44,7 @@ class CostFunction():
             Mean cost
         """
         m = y.shape[0]
-        return (1 / m) * CostFunction.cross_entropy(y, y_hat, epsilon).sum()
+        return (1.0 / m) * CostFunction.cross_entropy(y, y_hat, epsilon).sum()
 
     @staticmethod
     def cross_entropy(y, y_hat, epsilon=1e-10):
@@ -73,7 +73,7 @@ class CostFunction():
         return cost
 
     @staticmethod
-    def d_cross_entropy(y, y_hat):
+    def d_cross_entropy(y, y_hat, epsilon=1e-10):
         """
         Calculates the partial derivative of cross-entropy (logistic regression cost) for each prediction with respect to
         y hat.
@@ -91,7 +91,9 @@ class CostFunction():
             Derivative of cost for each prediction
         """
 
-        d = -((y / y_hat) - (1 - y) / (1 - y_hat))
+        # y_hat_adj = np.clip(y_hat, a_min=epsilon, a_max=(1 - epsilon))
+        y_hat_adj = y_hat
+        d = - ( (y / y_hat_adj) - (1.0 - y) / (1.0 - y_hat_adj) )
         return d
 
     @staticmethod

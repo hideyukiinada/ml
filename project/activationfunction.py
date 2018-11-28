@@ -53,7 +53,7 @@ class ActivationFunction():
         out: int
             1
         """
-        return 1
+        return 1.0
 
     @staticmethod
     def sigmoid(z):
@@ -70,7 +70,7 @@ class ActivationFunction():
         out: ndarray
             Output of the sigmoid function for input z
         """
-        return 1 / (1 + np.e ** (-z))
+        return 1.0 / (1.0 + np.e ** (-z))
 
     @staticmethod
     def d_sigmoid(z):
@@ -87,7 +87,7 @@ class ActivationFunction():
         out: ndarray
             Derivative of a sigmoid function for input z
         """
-        return ActivationFunction.sigmoid(z) * (1 - ActivationFunction.sigmoid(z))
+        return ActivationFunction.sigmoid(z) * (1.0 - ActivationFunction.sigmoid(z))
 
     @staticmethod
     def relu(z):
@@ -125,5 +125,5 @@ class ActivationFunction():
             Derivative of a ReLU function for input z
         """
         zero = np.zeros(z.shape)
-        m = np.maximum(1, zero)
+        m = np.maximum(1.0, zero)
         return m

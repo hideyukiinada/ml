@@ -37,10 +37,10 @@ def example():
 
     model = Model(num_input=2)
     model.add(Layer(5, activation=af.RELU))
-    model.add(Layer(4, activation=af.RELU))
+    # model.add(Layer(4, activation=af.RELU))
     model.add(Layer(1, activation=af.SIGMOID))
 
-    nn = NeuralNetwork(model, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY)  # layer no: 0, 1, 2
+    nn = NeuralNetwork(model, learning_rate=1e-2, cost_function=cf.CROSS_ENTROPY)  # layer no: 0, 1, 2
 
     m = 1000
     r = np.random.rand(m) / 10.0

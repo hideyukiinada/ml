@@ -31,6 +31,7 @@ import sys
 import os
 import logging
 
+import math
 import numpy as np
 
 from .activationfunction import ActivationFunction as af
@@ -162,15 +163,20 @@ class NeuralNetwork():
             num_units_this_layer = self.model.layers()[i + 1].num_units()
             num_units_prev_layer = self.model.layers()[i].num_units()
 
-            m = np.random.rand(num_units_prev_layer, num_units_this_layer)
-            self.weight.append(m)
-            self.gradient_weight.append(np.zeros(m.shape))
+            # w initialization below is following the recommendation on http://cs231n.github.io/neural-networks-2/
+            # min 100 to ensure that weights are small when the number of units is a few.
+            #w = np.random.randn(num_units_prev_layer, num_units_this_layer) * (min(1.0/100.0, math.sqrt(2.0/num_units_prev_layer)))
+            w = np.random.randn(num_units_prev_layer, num_units_this_layer) * 0.1
+            #w = np.random.randn(num_units_prev_layer, num_units_this_layer) / 100.0
+            self.weight.append(w)
+            self.gradient_weight.append(np.zeros(w.shape))
 
-            b = np.random.rand(1, num_units_this_layer) / 1e4  # See discussions on [IG] p.173
+            #b = np.random.rand(1, num_units_this_layer) * 1e-10  # See discussions on [IG] p.173
+            b = np.zeros((1, num_units_this_layer))
             self.bias.append(b)
             self.gradient_bias.append(np.zeros(b.shape))
 
-    def __init__(self, model, cost_function=cf.MEAN_SQUARED_ERROR, learning_rate=0.000001):
+    def __init__(self, model, cost_function=cf.MEAN_SQUARED_ERROR, learning_rate=0.001):
         """
         Initialize the class.
 
@@ -229,7 +235,13 @@ class NeuralNetwork():
         """
         # Affine transformation
         z = a_prev.dot(self.weight[current_layer_index]) + self.bias[current_layer_index]
-        self.z[current_layer_index] = z
+
+        # Normalize
+        #z_mean = np.mean(z, axis=0) # mean over the dataset
+        #z2 = (z-z_mean)/z_mean
+
+        self.z[current_layer_index] = z.copy() #FIXME
+
 
         # Activation
         if self.model.layers()[current_layer_index].activation() == af.SIGMOID:
@@ -239,7 +251,7 @@ class NeuralNetwork():
         else:
             a = af.none(z)
 
-        self.a[current_layer_index] = a
+        self.a[current_layer_index] = a.copy() #FIXME
 
         return (a)
 
@@ -276,8 +288,8 @@ class NeuralNetwork():
         A variable 'derivative_cumulative' carries this over from the last layer all the way to the first layer.
         """
 
-        pj_pa = self.derivative_j_wrt_a(y, y_hat, cost_function=self.cost_function)
-        derivative_cumulative = pj_pa
+        dj_wrt_a = self.derivative_j_wrt_a(y, y_hat, cost_function=self.cost_function)
+        derivative_cumulative = dj_wrt_a
 
         for i in range(self.num_layers):
             derivative_cumulative = self._backprop_one_layer(derivative_cumulative, self.num_layers - i)
