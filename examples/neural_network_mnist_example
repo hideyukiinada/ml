@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+"""
+Example code to demo logistic regression using NeuralNetwork class.
+
+__author__ = "Hide Inada"
+__copyright__ = "Copyright 2018, Hide Inada"
+__license__ = "The MIT License"
+__email__ = "hideyuki@gmail.com"
+"""
+
+import os
+import logging
+
+import numpy as np
+import matplotlib.pyplot as plt
+import sys
+
+import keras
+from keras.datasets import mnist
+
+from project.neuralnetwork import NeuralNetwork
+from project.neuralnetwork import NeuralNetwork
+from project.neuralnetwork import Model
+from project.neuralnetwork import Layer
+from project.activationfunction import ActivationFunction as af
+from project.costfunction import CostFunction as cf
+
+log = logging.getLogger(__name__)
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
+
+
+def example():
+    """An example to demonstrate how to use k-means.
+
+    Contains the code to:
+    - Randomly generate multiple sets of data.  Coordinates of data for each set is within a circle specified
+      in the argument to random_filled_circle.
+    - Once those sets are defined, pass the data to KMeans.clustering to auto-classify into clusters.
+    - Use matplotlib to create a scatter plot of the clusters.
+    """
+
+    # Download mnist data via Keras API
+    (x, y), (x_test, y_test) = mnist.load_data() # https://keras.io/datasets/
+
+    # Change the value from 0<= x <= 255 in UINT8 to 0 <= x <= 1 in float
+    x = x / 255.0
+    x_test = x_test / 255.0
+
+    # Flatten
+    x_flat = x.reshape((x.shape[0], 28*28))
+
+    #x_flat = x_flat[0:4,] # tmp
+
+    x_test_flat = x_test.reshape((x_test.shape[0], 28*28))
+
+    y_oh = keras.utils.to_categorical(y, 10) * 1.0
+
+    #y_oh = y_oh[0:4,] # tmp
+
+    y_test_oh = keras.utils.to_categorical(y_test, 10)
+
+    model = Model(num_input=28*28)
+    model.add(Layer(512, activation=af.RELU))
+    model.add(Layer(128, activation=af.RELU))
+    model.add(Layer(10, activation=af.SIGMOID))
+
+    nn = NeuralNetwork(model, learning_rate=0.01, cost_function=cf.CROSS_ENTROPY)  # layer no: 0, 1, 2
+
+    nn.fit(x_flat, y_oh, epochs=500, verbose=True, interval=1)
+
+    # predict
+    y_hat = nn.predict(x_test_flat)
+    total_size = y_hat.shape[0]
+
+    print("Total: %d" % (total_size))
+
+    adjusted_y_hat = np.argmax(y_hat, axis=1)
+
+    for i in range(10):
+        print("y: %d, y_hat_adj: %d, y_hat: %s" % (y_test[i], adjusted_y_hat[i], str(y_hat[i])))
+
+    matched_indices = (adjusted_y_hat == y_test)
+
+    matched_count = y_test[matched_indices].shape[0]
+
+    print("Matched: %d out of Total: %d (%f percent)" % (matched_count, total_size, matched_count*100/total_size))
+
+
+    #print(y_hat)
+
+
+def main():
+    """Defines an application's main functionality"""
+    example()
+
+
+if __name__ == "__main__":
+    main()
