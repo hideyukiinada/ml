@@ -14,7 +14,7 @@
 | File name | Note | |
 |---|---|---|
 | kmeans_example | An example for k-means clustering with 5 clusters | ![sample](assets/images/k-means-demo.png)|
-| neural_network_mnist_example | Neural network example to identify MNIST digit data. Accuracy with the 11/28/2018 version of the code is 87.6% against the MNIST test data that contains 10,000 sample data. | |
+| neural_network_mnist_example | Neural network example to identify MNIST digit data. Accuracy as of [this rev]( https://github.com/hideyukiinada/ml/commit/5b9e4dca610791d5d9f21dd1890e1a27c3002c2a) is 91.0% against the MNIST test data that contains 10,000 sample data. | |
 | neural_network_logistic_regression_example | Neural network logistic regression example code | |
 | activation_example | Activation function example code | |
 | cost_example | Cost function example code | |
