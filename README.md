@@ -2,16 +2,16 @@
 
 # File list under the project directory
 
-| File name | Note | |
-|---|---|---|
-| neuralnetwork.py | Implementation of a plain-vanilla neural network built from scratch with numpy | |
-| activationfunction.py | Implementation of activation functions for neural network | |
-| costfunction.py | Implementation of cost functions for neural network including cross-entropy & MSE | |
-| kmeans.py | Implementation of k-means clustering method. Notes: As the below Wikipedia article points out, there is no guarantee that this implementation finds the optimal clustering result. https://en.wikipedia.org/wiki/K-means_clustering | |
+| Summary| File name | Note | |
+|---|---|---|---|
+| Main neural network code| neuralnetwork.py | Implementation of a plain-vanilla neural network built from scratch with numpy | |
+| Activation functions| activationfunction.py | Implementation of activation functions for neural network | |
+| Cost functions | costfunction.py | Implementation of cost functions for neural network including cross-entropy & MSE | |
+| K-means | kmeans.py | Implementation of k-means clustering method. Notes: As the below Wikipedia article points out, there is no guarantee that this implementation finds the optimal clustering result. https://en.wikipedia.org/wiki/K-means_clustering | |
 
 # File list under the examples directory
 
-| File| File name | Note | 
+| Summary| File name | Note | 
 |---|---|---|
 |K-means| kmeans_example | An example for k-means clustering with 5 clusters. ![sample](assets/images/k-means-demo.png)|
 | NeuralNetwork class demo with batch gradient descent against MNIST| neural_network_mnist_example | Neural network example to identify MNIST digit data using the **batch gradient descent**. Accuracy as of [this rev]( https://github.com/hideyukiinada/ml/commit/5b9e4dca610791d5d9f21dd1890e1a27c3002c2a) is 91.0% against the MNIST test data that contains 10,000 sample data. |
