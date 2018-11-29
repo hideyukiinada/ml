@@ -55,7 +55,7 @@ def example():
 
     nn = NeuralNetwork(model, learning_rate=0.0001, cost_function=cf.CROSS_ENTROPY, optimizer=opt.SGD)  # layer no: 0, 1, 2
 
-    nn.fit(x_flat, y_oh, epochs=4, verbose=True, interval=1)
+    nn.fit(x_flat, y_oh, epochs=5, verbose=True, interval=1)
 
     # predict
     y_hat_oh = nn.predict(x_test_flat)
