@@ -18,7 +18,7 @@
 | NeuralNetwork class demo with SGD against MNIST|| neural_network_mnist_sgd_example | Neural network example to identify MNIST digit data using **SGD**. Accuracy as of [this rev]( https://github.com/hideyukiinada/ml/commit/1cfd9bb688b364309c8dda9cabdc41e72c512b7a) is 91.7% with 5 epochs against the MNIST test data that contains 10,000 sample data. | |
 | NeuralNetwork class demo with Adam optimizer against MNIST|| neural_network_mnist_adam_example | Neural network example to identify MNIST digit data using **Adam**. Accuracy as of [this rev]( https://github.com/hideyukiinada/ml/commit/62eba5630239a368fa1895569b669ed290e899e8) is 90.3% with 2 epochs against the MNIST test data that contains 10,000 sample data. | |
 | NeuralNetwork class demo for logical AND operation|| neural_network_logistic_regression_example | Neural network logistic regression example code | |
-| activation_example | Activation function example code | |
-| cost_example | Cost function example code | |
+|Activation functions demo| activation_example | Activation function example code | |
+|Cost functions demo| cost_example | Cost function example code | |
 
 
