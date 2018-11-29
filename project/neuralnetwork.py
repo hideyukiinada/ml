@@ -17,6 +17,9 @@ bibtex entry for the [IG] above:
     year={2016}
 }
 
+Adam optimization code is based on the below paper:
+[DK] Diederik P. Kingma and Jimmy Lei Ba, ADAM: A METHOD FOR STOCHASTIC OPTIMIZATION, https://arxiv.org/abs/1412.6980, 2015
+
 I crafted the code from scratch based on the algorithm that I learned, so please email me if you see an error
 in this code
 
@@ -148,16 +151,39 @@ class NeuralNetwork():
         With the exception of a[0] which is used to access input, all others have valid values only with indices
         greater than or equal to 1.
         """
-        self.weight = list()
-        self.weight.append(None)  # Make it 1-based. This is because input does not have a matrix
-        self.gradient_weight = list()
-        self.gradient_weight.append(None)
-        self.bias = list()
-        self.bias.append(None)  # Make it 1-based
-        self.gradient_bias = list()
-        self.gradient_bias.append(None)
-        self.z = [None] * (self.num_layers + 1)
-        self.a = [None] * (self.num_layers + 1)
+
+        def list_with_n_elements(n):
+            """
+            Helper function to generate a list with n elements.
+            The primary use for this is to instantiate a list with one item as our neural network uses
+            1-based index for all except for accessing the input as layer 0 activation.
+
+
+            Parameters
+            ----------
+            n: int
+                Number of elements
+
+            Returns
+            -------
+            out: list
+                list with n elements.  All elements are set to None
+            """
+            return [None] * n
+
+        self.weight = list_with_n_elements(1)
+        self.gradient_weight = list_with_n_elements(1)
+        self.bias = list_with_n_elements(1)
+        self.gradient_bias = list_with_n_elements(1)
+        self.z = list_with_n_elements(self.num_layers + 1)
+        self.a = list_with_n_elements(self.num_layers + 1)
+
+        # Create a list for holding references to moment vectors for ADAM
+        if self.optimizer == opt.ADAM:
+            self.mt_weight = list_with_n_elements(1)  # First moment vector for weight
+            self.mt_bias = list_with_n_elements(1)  # First moment vector for bias
+            self.vt_weight = list_with_n_elements(1)  # Second moment vector for weight
+            self.vt_bias = list_with_n_elements(1)  # Second moment vector for bias
 
         # Allocate weight and bias for each layer
         for i in range(self.num_layers):
@@ -166,18 +192,25 @@ class NeuralNetwork():
 
             # w initialization below is following the recommendation on http://cs231n.github.io/neural-networks-2/
             # min 100 to ensure that weights are small when the number of units is a few.
-            #w = np.random.randn(num_units_prev_layer, num_units_this_layer) * (min(1.0/100.0, math.sqrt(2.0/num_units_prev_layer)))
+            # w = np.random.randn(num_units_prev_layer, num_units_this_layer) * (min(1.0/100.0, math.sqrt(2.0/num_units_prev_layer)))
+            # w = np.random.randn(num_units_prev_layer, num_units_this_layer) / 100.0
             w = np.random.randn(num_units_prev_layer, num_units_this_layer) * 0.1
-            #w = np.random.randn(num_units_prev_layer, num_units_this_layer) / 100.0
             self.weight.append(w)
             self.gradient_weight.append(np.zeros(w.shape))
 
-            #b = np.random.rand(1, num_units_this_layer) * 1e-10  # See discussions on [IG] p.173
+            # b = np.random.rand(1, num_units_this_layer) * 1e-10  # See discussions on [IG] p.173
             b = np.zeros((1, num_units_this_layer))
             self.bias.append(b)
             self.gradient_bias.append(np.zeros(b.shape))
 
-    def __init__(self, model, cost_function=cf.MEAN_SQUARED_ERROR, learning_rate=0.001, optimizer=opt.BATCH):
+            if self.optimizer == opt.ADAM:
+                self.mt_weight.append(np.zeros(w.shape))
+                self.mt_bias.append(np.zeros(b.shape))
+                self.vt_weight.append(np.zeros(w.shape))
+                self.vt_bias.append(np.zeros(b.shape))
+
+    def __init__(self, model, cost_function=cf.MEAN_SQUARED_ERROR, learning_rate=0.001, optimizer=opt.BATCH,
+                 optimizer_settings=None):
         """
         Initialize the class.
 
@@ -188,10 +221,15 @@ class NeuralNetwork():
         learning_rate: float
             Controls the speed of gradient descent.  At the end of each each epoch,
             gradient is multiplied with the learning rate before subtracted from weight.
+        optimizer: int
+            Optimizer type
+        Optimizer settings: Optimizer parameters object
+            Optimizer parameters
         """
 
         self.model = model
         self.optimizer = optimizer
+        self.optimizer_settings = optimizer_settings
         self.cost_function = cost_function
         self.learning_rate = learning_rate
         self.num_layers = len(model.layers()) - 1  # To exclude the input layer
@@ -239,11 +277,10 @@ class NeuralNetwork():
         z = a_prev.dot(self.weight[current_layer_index]) + self.bias[current_layer_index]
 
         # Normalize
-        #z_mean = np.mean(z, axis=0) # mean over the dataset
-        #z2 = (z-z_mean)/z_mean
+        # z_mean = np.mean(z, axis=0) # mean over the dataset
+        # z2 = (z-z_mean)/z_mean
 
-        self.z[current_layer_index] = z.copy() #FIXME
-
+        self.z[current_layer_index] = z.copy()  # FIXME
 
         # Activation
         if self.model.layers()[current_layer_index].activation() == af.SIGMOID:
@@ -253,7 +290,7 @@ class NeuralNetwork():
         else:
             a = af.none(z)
 
-        self.a[current_layer_index] = a.copy() #FIXME
+        self.a[current_layer_index] = a.copy()  # FIXME
 
         return (a)
 
@@ -355,9 +392,46 @@ class NeuralNetwork():
         rate.
         """
         for i in range(self.num_layers):
+
             layer_index = self.num_layers - i
-            self.weight[layer_index] -= self.learning_rate * self.gradient_weight[layer_index]
-            self.bias[layer_index] -= self.learning_rate * self.gradient_bias[layer_index]
+
+            if self.optimizer == opt.ADAM:
+                beta1 = self.optimizer_settings.beta1
+                beta2 = self.optimizer_settings.beta2
+                beta1_to_t = self.optimizer_settings.beta1_to_t
+                beta2_to_t = self.optimizer_settings.beta2_to_t
+                epsilon = self.optimizer_settings.epsilon
+
+                self.mt_weight[layer_index] = beta1 * self.mt_weight[layer_index] + \
+                                              (1 - beta1) * self.gradient_weight[layer_index]
+
+                self.vt_weight[layer_index] = beta2 * self.vt_weight[layer_index] + \
+                                              (1 - beta2) * self.gradient_weight[layer_index] ** 2
+
+                self.mt_bias[layer_index] = beta1 * self.mt_bias[layer_index] + \
+                                            (1 - beta1) * self.gradient_bias[layer_index]
+
+                self.vt_bias[layer_index] = beta2 * self.vt_bias[layer_index] + \
+                                            (1 - beta2) * self.gradient_bias[layer_index] ** 2
+
+                mt_weight_hat = self.mt_weight[layer_index] / (1.0 - beta1_to_t)
+                vt_weight_hat = self.vt_weight[layer_index] / (1.0 - beta2_to_t)
+
+                mt_bias_hat = self.mt_bias[layer_index] / (1.0 - beta1_to_t)
+                vt_bias_hat = self.vt_bias[layer_index] / (1.0 - beta2_to_t)
+
+                self.weight[layer_index] -= self.learning_rate * mt_weight_hat / (
+                        np.sqrt(vt_weight_hat) + epsilon)
+                self.bias[layer_index] -= self.learning_rate * mt_bias_hat / (
+                        np.sqrt(vt_bias_hat) + epsilon)
+
+            else:
+                self.weight[layer_index] -= self.learning_rate * self.gradient_weight[layer_index]
+                self.bias[layer_index] -= self.learning_rate * self.gradient_bias[layer_index]
+
+        if self.optimizer == opt.ADAM:
+            self.optimizer_settings.beta1_to_t *= self.optimizer_settings.beta1
+            self.optimizer_settings.beta2_to_t *= self.optimizer_settings.beta2
 
     def fit(self, x, y, epochs, verbose=True, interval=1):
         """
@@ -382,25 +456,48 @@ class NeuralNetwork():
 
             for i in range(epochs):
                 for j in range(x.shape[0]):
-                    x_one = x[j:j+1]
-                    y_one = y[j:j+1]
+                    x_one = x[j:j + 1]
+                    y_one = y[j:j + 1]
                     y_hat = self._forward_prop(x_one)
 
                     if verbose:
+                        cost = -1
                         if self.cost_function == cf.CROSS_ENTROPY:
                             cost = cf.mean_cross_entropy(y_one, y_hat)
                         elif self.cost_function == cf.MEAN_SQUARED_ERROR:
                             cost = cf.mean_squared_error(y_one, y_hat)
 
+                        if (j % 100 == 0):
+                            print("[%d %d/%d epochs] Cost: %.07f" % (j, i + 1, epochs, cost))
+
                     self._backprop(x_one, y_one, y_hat)
 
-                    if(j%100 == 0):
-                        print("[%d %d/%d epochs] Cost: %.07f" % (j, i + 1, epochs, cost))
 
-                if ((i + 1) % interval == 0):
-                    print("[%d/%d epochs] Cost: %.07f" % (i + 1, epochs, cost))
+        elif self.optimizer == opt.ADAM:
+            self.dataset_size = 1
 
-        else: # Batch gradient
+            self.optimizer_settings.beta1_to_t = self.optimizer_settings.beta1
+            self.optimizer_settings.beta2_to_t = self.optimizer_settings.beta2
+
+            for i in range(epochs):
+                for j in range(x.shape[0]):
+                    x_one = x[j:j + 1]
+                    y_one = y[j:j + 1]
+                    y_hat = self._forward_prop(x_one)
+
+                    if verbose:
+                        cost = -1
+                        if self.cost_function == cf.CROSS_ENTROPY:
+                            cost = cf.mean_cross_entropy(y_one, y_hat)
+                        elif self.cost_function == cf.MEAN_SQUARED_ERROR:
+                            cost = cf.mean_squared_error(y_one, y_hat)
+
+                        if (j % 100 == 0):
+                            print("[%d %d/%d epochs] Cost: %.07f" % (j, i + 1, epochs, cost))
+
+                    self._backprop(x_one, y_one, y_hat)
+
+        else:  # Batch gradient
             self.dataset_size = x.shape[0]
 
             for i in range(epochs):
@@ -412,8 +509,8 @@ class NeuralNetwork():
                     elif self.cost_function == cf.MEAN_SQUARED_ERROR:
                         cost = cf.mean_squared_error(y, y_hat)
 
-                    if ((i+1) % interval == 0):
-                        print("[%d/%d epochs] Cost: %.07f" % (i+1, epochs, cost))
+                    if ((i + 1) % interval == 0):
+                        print("[%d/%d epochs] Cost: %.07f" % (i + 1, epochs, cost))
 
                 self._backprop(x, y, y_hat)
 
