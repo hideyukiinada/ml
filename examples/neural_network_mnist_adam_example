@@ -63,7 +63,7 @@ def example():
     nn = NeuralNetwork(model, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY, optimizer=opt.ADAM,
                        optimizer_settings=AdamOptimizer(beta1=0.9, beta2=0.999, epsilon=1e-8))
 
-    nn.fit(x_flat, y_oh, epochs=1, verbose=True, interval=1)
+    nn.fit(x_flat, y_oh, epochs=2, verbose=True, interval=1)
 
     # predict
     y_hat_oh = nn.predict(x_test_flat)
