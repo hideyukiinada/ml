@@ -124,6 +124,51 @@ class ActivationFunction():
         out: ndarray
             Derivative of a ReLU function for input z
         """
-        zero = np.zeros(z.shape)
-        m = np.maximum(1.0, zero)
+
+        m = np.zeros(z.shape)
+        np.place(m, z>=0, [1.0])
+        return m
+
+    @staticmethod
+    def leaky_relu(z, alpha=0.2):
+        """
+        Calculates the Leaky ReLU function.
+
+        Parameters
+        -----------
+        z: ndarray
+            Input
+        alpha: float
+            if z is negative, output = z multiplied by alpha
+
+        Returns
+        --------
+        out: ndarray
+
+            Output of a Leaky ReLU function for input z
+        """
+        alpha_vals = np.full(z.shape, z*alpha)
+        m = np.maximum(z, alpha_vals)
+        return m
+
+    @staticmethod
+    def d_leaky_relu(z, alpha=0.2):
+        """
+        Calculates the derivative of a Leaky ReLU function.
+
+        Parameters
+        -----------
+        z: ndarray
+            Input
+        alpha: float
+            if z is negative, output = alpha
+
+        Returns
+        --------
+        out: ndarray
+            Derivative of a Leaky ReLU function for input z and alpha
+        """
+
+        m = np.ones(z.shape)
+        np.place(m, z<0, [alpha])
         return m

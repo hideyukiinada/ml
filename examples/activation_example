@@ -38,7 +38,7 @@ def main():
         print("Input: %.2f, Output:%.2f" % (x_y[i, 0], x_y[i, 1]))
 
     # ReLU
-    print("relu")
+    print("ReLU")
     x = np.array([-10, 0, 10])
     y = ActivationFunction.relu(x)
 
@@ -47,9 +47,27 @@ def main():
         print("Input: %.2f, Output:%.2f" % (x_y[i, 0], x_y[i, 1]))
 
     # dReLU
-    print("d_relu")
+    print("dReLU")
     x = np.array([-10, 0, 10])
     y = ActivationFunction.d_relu(x)
+
+    x_y = pair_up_as_col_vectors(x, y)
+    for i in range(x_y.shape[0]):
+        print("Input: %.2f, Output:%.2f" % (x_y[i, 0], x_y[i, 1]))
+
+    # Leaky ReLU
+    print("Leaky ReLU")
+    x = np.array([-10, 0, 10])
+    y = ActivationFunction.leaky_relu(x, 0.3)
+
+    x_y = pair_up_as_col_vectors(x, y)
+    for i in range(x_y.shape[0]):
+        print("Input: %.2f, Output:%.2f" % (x_y[i, 0], x_y[i, 1]))
+
+    # dLeakyReLU
+    print("dLeakyReLU")
+    x = np.array([-10, 0, 10])
+    y = ActivationFunction.d_leaky_relu(x, 0.25)
 
     x_y = pair_up_as_col_vectors(x, y)
     for i in range(x_y.shape[0]):
