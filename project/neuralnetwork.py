@@ -276,11 +276,7 @@ class NeuralNetwork():
         # Affine transformation
         z = a_prev.dot(self.weight[current_layer_index]) + self.bias[current_layer_index]
 
-        # Normalize
-        # z_mean = np.mean(z, axis=0) # mean over the dataset
-        # z2 = (z-z_mean)/z_mean
-
-        self.z[current_layer_index] = z.copy()  # FIXME
+        self.z[current_layer_index] = z
 
         # Activation
         if self.model.layers()[current_layer_index].activation() == af.SIGMOID:
@@ -290,7 +286,7 @@ class NeuralNetwork():
         else:
             a = af.none(z)
 
-        self.a[current_layer_index] = a.copy()  # FIXME
+        self.a[current_layer_index] = a
 
         return (a)
 
