@@ -20,6 +20,7 @@ class ActivationFunction():
     NONE = 0
     RELU = 1
     SIGMOID = 2
+    LEAKY_RELU = 3
 
     @staticmethod
     def none(z):

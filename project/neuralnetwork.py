@@ -283,6 +283,8 @@ class NeuralNetwork():
             a = af.sigmoid(z)
         elif self.model.layers()[current_layer_index].activation() == af.RELU:
             a = af.relu(z)
+        elif self.model.layers()[current_layer_index].activation() == af.LEAKY_RELU:
+            a = af.leaky_relu(z)
         else:
             a = af.none(z)
 
@@ -355,6 +357,8 @@ class NeuralNetwork():
             pa_pz = self.sigmoid_derivative_with_z(layer_index)
         elif self.model.layers()[layer_index].activation() == af.RELU:
             pa_pz = self.relu_derivative_with_z(layer_index)
+        elif self.model.layers()[layer_index].activation() == af.LEAKY_RELU:
+            pa_pz = self.leaky_relu_derivative_with_z(layer_index)
         else:
             pa_pz = self.none_derivative_with_z(layer_index)
 
@@ -572,6 +576,23 @@ class NeuralNetwork():
             Partial derivative of a with respect to z
         """
         return af.d_relu(self.z[layer_index])
+
+
+    def leaky_relu_derivative_with_z(self, layer_index):
+        """
+        Calculate the derivative of activation using the value of z used in forward prop.
+
+        Parameters
+        ----------
+        layer_index: int
+            Layer index to be used in retrieving the value of z
+
+        Returns
+        -------
+        out: ndarray
+            Partial derivative of a with respect to z
+        """
+        return af.d_leaky_relu(self.z[layer_index])
 
     def none_derivative_with_z(self, layer_index):
         """
