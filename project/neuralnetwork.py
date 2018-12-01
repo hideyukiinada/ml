@@ -40,6 +40,7 @@ import numpy as np
 from .activationfunction import ActivationFunction as af
 from .costfunction import CostFunction as cf
 from .optimizer import Optimizer as opt
+from .weightpersistence import WeightPersistence as wp
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
@@ -199,7 +200,7 @@ class NeuralNetwork():
             self.gradient_weight.append(np.zeros(w.shape))
 
             # b = np.random.rand(1, num_units_this_layer) * 1e-10  # See discussions on [IG] p.173
-            b = np.zeros((1, num_units_this_layer))
+            b = np.zeros((1, num_units_this_layer))  # FIXME TMP
             self.bias.append(b)
             self.gradient_bias.append(np.zeros(b.shape))
 
@@ -577,7 +578,6 @@ class NeuralNetwork():
         """
         return af.d_relu(self.z[layer_index])
 
-
     def leaky_relu_derivative_with_z(self, layer_index):
         """
         Calculate the derivative of activation using the value of z used in forward prop.
@@ -671,3 +671,45 @@ class NeuralNetwork():
         Since z = w a_prev + b, the partial derivative is 1.
         """
         return 1
+
+    # Loading and saving weights
+    def load(self, file_path):
+        """
+        Load the matrix weight from a file specified with file_path.
+
+        Parameters
+        ---------
+        file_path: Pathlib.path
+            Path to save the weights
+
+        Returns
+        -------
+        Weights of the model
+
+        Raises
+        ------
+        File not found
+        """
+        weight, bias = wp.load(file_path)
+
+        self.weight = weight
+        self.bias = bias
+
+    def save(self, file_path):
+
+        """
+        Save the matrix weight in a file specified by file_path.
+
+        Parameters
+        ----------
+        file_path: Pathlib.path
+            Path to save the weights
+        """
+
+        # index corresponds to a layer.  layer 0 does not have weight, but wp is aware of this.
+        wp.save(file_path,
+                {
+                    "weight": self.weight,
+                    "bias": self.bias
+                }
+                )

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Example code to demo logistic regression using NeuralNetwork class.
+Example code to demo saving the weights of a model.
 
 __author__ = "Hide Inada"
 __copyright__ = "Copyright 2018, Hide Inada"
@@ -10,8 +10,9 @@ __email__ = "hideyuki@gmail.com"
 
 import os
 import logging
-
+from pathlib import Path
 import numpy as np
+
 from project.neuralnetwork import NeuralNetwork
 from project.neuralnetwork import Model
 from project.neuralnetwork import Layer
@@ -21,9 +22,11 @@ from project.costfunction import CostFunction as cf
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
 
+WEIGHTS_FILE_PATH = "../../weights/weight_persistent_example.h5"
+
 
 def example():
-    """An example to demonstrate how to use NeuralNetwork class.
+    """An example to show save and load weights for NeuralNetwork class.
     """
 
     model = Model(num_input=2)
@@ -32,26 +35,34 @@ def example():
 
     nn = NeuralNetwork(model, learning_rate=1e-2, cost_function=cf.CROSS_ENTROPY)  # layer no: 0, 1, 2
 
-    m = 1000
-    r = np.random.rand(m) / 10.0
-    r = np.abs(r)
-    r = r.reshape((m, 1))
+    weight_path = Path(WEIGHTS_FILE_PATH)
+    if weight_path.exists():
+        log.info("Weight file detected. Loading.")
+        nn.load(weight_path)
+    else:
+        log.info("Weight file not detected. Proceed to training.")
+        m = 1000
+        r = np.random.rand(m) / 10.0
+        r = np.abs(r)
+        r = r.reshape((m, 1))
 
-    x = np.zeros((m, 2)) + r
-    y = np.zeros((m, 1))
+        x = np.zeros((m, 2)) + r
+        y = np.zeros((m, 1))
 
-    a = np.arange(0, m, 4)  # array([ 0.,  4.,  8., ..., 996])
-    b = np.arange(1, m, 4)
-    c = np.arange(2, m, 4)
-    d = np.arange(3, m, 4)
+        a = np.arange(0, m, 4)  # array([ 0.,  4.,  8., ..., 996])
+        b = np.arange(1, m, 4)
+        c = np.arange(2, m, 4)
+        d = np.arange(3, m, 4)
 
-    q = int(m / 4.0)
-    x[b, 0] = 1.0
-    x[c, 1] = 1.0
-    x[d,] = 1.0
-    y[d,] = 1.0
+        q = int(m / 4.0)
+        x[b, 0] = 1.0
+        x[c, 1] = 1.0
+        x[d,] = 1.0
+        y[d,] = 1.0
 
-    nn.fit(x, y, epochs=20000, verbose=True, interval=1000)
+        nn.fit(x, y, epochs=20000, verbose=True, interval=1000)
+        nn.save(weight_path)
+        log.info("Weight file saved as %s" % (weight_path))
 
     # predict
     x_test = np.array([[0.02, 0.03], [0.1, 1], [1, 0.02], [1, 1]])

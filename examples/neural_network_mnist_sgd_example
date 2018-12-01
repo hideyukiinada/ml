@@ -18,7 +18,6 @@ import keras
 from keras.datasets import mnist
 
 from project.neuralnetwork import NeuralNetwork
-from project.neuralnetwork import NeuralNetwork
 from project.neuralnetwork import Model
 from project.neuralnetwork import Layer
 from project.activationfunction import ActivationFunction as af
@@ -53,7 +52,7 @@ def example():
     model.add(Layer(128, activation=af.RELU))
     model.add(Layer(10, activation=af.SIGMOID))
 
-    nn = NeuralNetwork(model, learning_rate=0.0001, cost_function=cf.CROSS_ENTROPY, optimizer=opt.SGD)  # layer no: 0, 1, 2
+    nn = NeuralNetwork(model, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY, optimizer=opt.SGD)  # layer no: 0, 1, 2
 
     nn.fit(x_flat, y_oh, epochs=2, verbose=True, interval=1)
 
