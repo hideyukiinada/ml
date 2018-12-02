@@ -25,5 +25,5 @@ This directory contains the code for a Flask-based webapp that allows the user t
 1. On your browser, go to http://localhost:5000
 
 # Accuracy
-You'll notice that accuracy will be much lower than 95% when you draw a digit.  This is as expected because the model is not trained with your handwriting.  For example, I myself have difficulty in getting the system to recognize 8, 9 and 0.
+You'll notice that accuracy will be much lower than 95% when you draw a digit.  This is as expected because the model is not trained with your handwriting.  For example, I myself have difficulty in getting the system to recognize 8, 9 and 0 that I draw.
 
