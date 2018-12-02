@@ -10,6 +10,7 @@ This directory contains the code for a Flask-based webapp that allows the user t
     WEIGHTS_FILE_PATH = "../../weights/mnist_example.h5"
     ```
 1. Run project/weight_persistence_mnist_example.
+1. Verify that you got 95% accuracy.  If this number is below 90%, something went wrong in training.
 1. Verify that mnist_example.h5 has been generated at the location specified in step 2. 
 1. Go to ml/web_examples/mnist/application directory.
 1. Open \_\_init__.py
