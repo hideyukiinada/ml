@@ -26,6 +26,11 @@ This directory contains example files related to this project.
 | NeuralNetwork class demo with SGD optimizer against Fashion MNIST| neural_network_fashion_mnist_sgd_example | |
 | NeuralNetwork class demo with Adam optimizer against Fashion MNIST| neural_network_fashion_mnist_adam_example | |
 
+### Loading & Saving Weights and Biases
+| Summary| File name | Note | 
+|---|---|---|
+|Example to save and load weights for the basic logistic regression | weight_persistence_example | Both weights and biases are saved to a hdf5 file. |
+|Example to save and load weights for MNIST | weight_persistence_example |  |
 
 ### Helper class examples
 
