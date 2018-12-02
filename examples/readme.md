@@ -6,7 +6,7 @@ This directory contains example files related to this project.
 
 | Summary| File name | Note | 
 |---|---|---|
-|K-means| kmeans_example | An example for k-means clustering with 5 clusters. ![sample](assets/images/k-means-demo.png)|
+|K-means| kmeans_example | An example for k-means clustering with 5 clusters. ![sample](../assets/images/k-means-demo.png)|
 
 ## Using NeuralNetwork class
 
