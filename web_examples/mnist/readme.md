@@ -18,7 +18,7 @@ This directory contains the code for a Flask-based webapp that allows the user t
     ```python
     WEIGHTS_FILE_PATH = "../../../weights/mnist_example.h5"
     ```
-    Note that because the web app script is at a different level, you need to adjust the directory level accordingly.  Namely, you cannot simply copy the relative path from step 2.
+    Note that because the web app script is at a different level on the file system from the weight_persistence_mnist_example script, you need to adjust the directory level accordingly.  Namely, you cannot simply copy the relative path from step 2.
 1. Start Python virtualenv if you haven't.  You need to be running Python 3.5 or later.
 1. Type ./start.sh to start the Flask web server.
 1. On your browser, go to http://localhost:5000
