@@ -2,10 +2,12 @@ This directory contains the code for a Flask-based webapp that allows the user t
 
 ![screenshot](https://github.com/hideyukiinada/ml/blob/master/assets/images/mnist-webapp-example.png)
 
-* Steps
+*Steps
 1. Open project/weight_persistence_mnist_example
 2. Configure the below line to specify where to specify the weights file
+```python
 WEIGHTS_FILE_PATH = "../../weights/mnist_example.h5"
+```
 3. Run project/weight_persistence_mnist_example.
 4. Verify that mnist_example.h5 has been generated. 
 5. Go to ml/web_examples/mnist.
