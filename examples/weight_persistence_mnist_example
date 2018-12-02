@@ -18,7 +18,6 @@ import keras
 from keras.datasets import mnist
 
 from project.neuralnetwork import NeuralNetwork
-from project.neuralnetwork import NeuralNetwork
 from project.neuralnetwork import Model
 from project.neuralnetwork import Layer
 from project.activationfunction import ActivationFunction as af

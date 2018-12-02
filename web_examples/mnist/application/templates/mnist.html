@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Code from https://getbootstrap.com/docs/4.0/getting-started/introduction/ start. -->
+    <!-- Licensing terms for this section: Code licensed MIT, docs CC BY 3.0. -->
+    <!-- For details, please go to https://getbootstrap.com/ -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <!-- Code from https://getbootstrap.com/docs/4.0/getting-started/introduction/ end -->
+
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'css/mnist.css') }}">
+</head>
+
+<body>
+<div class="container">
+
+    <div class="card text-center">
+        <div class="card-header">
+            MNIST Digit Recognition Demo
+        </div>
+        <div class="card-body" style="text-align: center;">
+            <h5 class="card-title">using NeuralNetwork class</h5>
+            <p class="card-text">Please draw a number in the below box using a mouse.
+
+            <div class="draw_grid_container">
+                <div class="draw_grid_container" style="margin: 0 auto;height:{{ 5*20+2 }}px;width:{{ 5*20+2 }}px;">
+                    {% for i in dimensions %}
+                    {% for j in dimensions %}
+                    <div class="draw_cell" style="top:{{ i*5 }}px;left:{{ j*5 }}px;" id='{{ i }}_{{ j }}'>
+                    </div>
+                    {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <form style="position: relative;">
+                {% for i in dimensions %}
+                {% for j in dimensions %}
+                <input type="hidden" class="value_holder" name="h_{{ i }}_{{ j }}" id="h_{{ i }}_{{ j }}" value="0"/>
+                {% endfor %}
+                <div class="spacer"></div>
+                {% endfor %}
+
+                <button type="button" class="btn btn-primary" id="predict" value="Predict">Predict</button>
+                <button type="button" class="btn btn-secondary" id="clear" value="Clear">Reset</button>
+            </form>
+
+        </div>
+        <div class="card-footer text-muted">
+            <p id="result">&nbsp;</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<!-- Code from https://getbootstrap.com/docs/4.0/getting-started/introduction/ start -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<!-- Code from https://getbootstrap.com/docs/4.0/getting-started/introduction/ end -->
+<script src="{{ url_for('static', filename = 'js/mnist.js') }}"></script>
+</div>
+</body>
+</html>

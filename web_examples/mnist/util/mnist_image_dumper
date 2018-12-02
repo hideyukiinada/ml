@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+"""
+Dump MNIST digit image from numpy array to JPG on the file system for viewing
+
+__author__ = "Hide Inada"
+__copyright__ = "Copyright 2018, Hide Inada"
+__license__ = "The MIT License"
+__email__ = "hideyuki@gmail.com"
+"""
+
+import sys
+import os
+import logging
+from pathlib import Path
+import numpy as np
+
+from PIL import Image
+from keras.datasets import mnist
+
+log = logging.getLogger(__name__)
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
+
+TMP_FILE_PATH = "../../../../tmp/mnist_digits/"
+NUM_IMAGES = 32
+
+
+def main():
+    """
+    Create image files for viewing from MNIST data.
+
+    This file downloads MNIST data via Keras util.
+    """
+    base_path = Path(TMP_FILE_PATH)
+
+    # Download mnist data via Keras API
+    (x, y), (x_test, y_test) = mnist.load_data()  # https://keras.io/datasets/
+
+    for i in range(NUM_IMAGES):
+        mnist_image = x[i*100,]
+
+        tmp_image = mnist_image.copy()
+        np.place(tmp_image, tmp_image < 128, [0.0])
+        np.place(tmp_image, tmp_image >= 128, [1.0])
+
+        # Uncomment below lines to output to console. You may need to adjust the number of symbols
+        # so that the output is squared-shaped.
+        # print("\n")
+        # for r in range(tmp_image.shape[0]):
+        #     print("\n")
+        #     for c in range(tmp_image.shape[1]):
+        #         if(tmp_image[r,c] == 0):
+        #             print(' ', end="")
+        #         else:
+        #             print('*', end="")
+
+        img_pil = Image.fromarray(np.uint8(mnist_image))
+
+        image_path = base_path / Path("%d.jpg" % (i))
+        img_pil.save(image_path)
+
+
+if __name__ == "__main__":
+    main()

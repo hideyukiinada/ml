@@ -1,0 +1,24 @@
+body {
+    margin:0px;
+}
+
+.draw_grid_container {
+    position: relative;
+    height: 160px;
+}
+
+.draw_cell {
+    position:absolute;
+    padding:0px;
+    border:1px;
+    margin:0;
+    box-sizing:
+    border-box;
+    width:5px;
+    height:5px;
+    background-color:#bddfff;
+}
+
+.spacer {
+    height: 1px;
+}
