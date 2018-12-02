@@ -5,7 +5,7 @@ This directory contains the code for a Flask-based webapp that allows the user t
 # Steps to set up and run the app
 1. Open project/weight_persistence_mnist_example
 1. Configure the below line to specify where to save the weights file
-
+    
 ```python
 WEIGHTS_FILE_PATH = "../../weights/mnist_example.h5"
 ```
@@ -14,7 +14,7 @@ WEIGHTS_FILE_PATH = "../../weights/mnist_example.h5"
 1. Go to ml/web_examples/mnist/application.
 1. Open \_\_init__.py
 1. Configure the below line to specify where to load the weights file from
-
+    
 ```python
 WEIGHTS_FILE_PATH = "../../../weights/mnist_example.h5"
 ```
