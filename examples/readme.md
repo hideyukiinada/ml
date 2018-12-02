@@ -30,7 +30,7 @@ This directory contains example files related to this project.
 | Summary| File name | Note | 
 |---|---|---|
 |Example to save and load weights for the basic logistic regression | weight_persistence_example | Both weights and biases are saved to a hdf5 file. |
-|Example to save and load weights for MNIST | weight_persistence_example |  |
+|Example to save and load weights for MNIST | weight_persistence_mnist_example | You need to run this file to test the web app under web_examples/mnist. |
 
 ### Helper class examples
 
