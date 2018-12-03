@@ -24,7 +24,7 @@ This directory contains example files related to this project.
 | NeuralNetwork class demo with SGD against MNIST|neural_network_mnist_sgd_example | Neural network example to identify MNIST digit data using **SGD**. Accuracy as of [this rev]( https://github.com/hideyukiinada/ml/commit/1cfd9bb688b364309c8dda9cabdc41e72c512b7a) is 91.7% with 5 epochs against the MNIST test data that contains 10,000 sample data. |
 | NeuralNetwork class demo with SGD against MNIST|neural_network_mnist_sgd_batch_size_256_example | For SGD & Adam, you can set the batch size to a number greater than 1 and this example shows how to specify that.  |
 | NeuralNetwork class demo with Adam optimizer against MNIST| neural_network_mnist_adam_example | Neural network example to identify MNIST digit data using **Adam**. Accuracy should be around 96% with 2 epochs against the MNIST test data that contains 10,000 sample data. (Tests were executed 3 times on 11/29/2018 and the result was 96.35%, 96.02% and 96.2% respectively) |
-| NeuralNetwork class demo with SGD optimizer against Fashion MNIST| neural_network_fashion_mnist_sgd_example | |
+| NeuralNetwork class demo with SGD optimizer against Fashion MNIST| neural_network_fashion_mnist_sgd_example | As of [this commit] (https://github.com/hideyukiinada/ml/commit/33056cceba92b9b782a1c762c42ab3afa104d5ca), accuracy was 86.15%. |
 | NeuralNetwork class demo with Adam optimizer against Fashion MNIST| neural_network_fashion_mnist_adam_example | |
 
 ### Loading & Saving Weights and Biases
