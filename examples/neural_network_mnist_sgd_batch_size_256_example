@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+"""
+Example code to demo NeuralNetwork class for digit recognition using MNIST data.
+
+__author__ = "Hide Inada"
+__copyright__ = "Copyright 2018, Hide Inada"
+__license__ = "The MIT License"
+__email__ = "hideyuki@gmail.com"
+"""
+
+import os
+import logging
+
+import numpy as np
+import sys
+
+import keras
+from keras.datasets import mnist
+
+from project.neuralnetwork import NeuralNetwork
+from project.neuralnetwork import Model
+from project.neuralnetwork import Layer
+from project.activationfunction import ActivationFunction as af
+from project.costfunction import CostFunction as cf
+from project.optimizer import Optimizer as opt
+
+log = logging.getLogger(__name__)
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
+
+
+def example():
+    """An example to show how to use NeuralNetwork class.
+
+    This file downloads MNIST data via Keras util, but does not use Keras functionality for neural network.
+    """
+
+    # Download mnist data via Keras API
+    (x, y), (x_test, y_test) = mnist.load_data() # https://keras.io/datasets/
+
+    # Change the value from 0<= x <= 255 in UINT8 to 0 <= x <= 1 in float
+    x = x / 255.0
+    x_test = x_test / 255.0
+
+    # Flatten
+    x_flat = x.reshape((x.shape[0], 28*28))
+    x_test_flat = x_test.reshape((x_test.shape[0], 28*28))
+    y_oh = keras.utils.to_categorical(y, 10) * 1.0
+    y_test_oh = keras.utils.to_categorical(y_test, 10)
+
+    model = Model(num_input=28*28)
+    model.add(Layer(512, activation=af.RELU))
+    model.add(Layer(128, activation=af.RELU))
+    model.add(Layer(10, activation=af.SIGMOID))
+
+    nn = NeuralNetwork(model, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY, optimizer=opt.SGD, batch_size=256)  # layer no: 0, 1, 2
+
+    nn.fit(x_flat, y_oh, epochs=100, verbose=True, interval=1)
+
+    # predict
+    y_hat_oh = nn.predict(x_test_flat)
+    total_size = y_hat_oh.shape[0]
+    y_hat_int = np.argmax(y_hat_oh, axis=1)  # to int from one-hot vector
+
+    matched_indices = (y_hat_int == y_test)
+    matched_count = y_test[matched_indices].shape[0]
+    print("Matched: %d out of Total: %d (%f percent)" % (matched_count, total_size, matched_count*100/total_size))
+
+def main():
+    """Defines an application's main functionality"""
+    example()
+
+
+if __name__ == "__main__":
+    main()

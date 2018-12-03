@@ -34,7 +34,6 @@ import sys
 import os
 import logging
 
-import math
 import numpy as np
 
 from .activationfunction import ActivationFunction as af
@@ -211,7 +210,7 @@ class NeuralNetwork():
                 self.vt_bias.append(np.zeros(b.shape))
 
     def __init__(self, model, cost_function=cf.MEAN_SQUARED_ERROR, learning_rate=0.001, optimizer=opt.BATCH,
-                 optimizer_settings=None):
+                 optimizer_settings=None, batch_size=1):
         """
         Initialize the class.
 
@@ -226,6 +225,8 @@ class NeuralNetwork():
             Optimizer type
         Optimizer settings: Optimizer parameters object
             Optimizer parameters
+        batch_size: int
+            Size of the batch
         """
 
         self.model = model
@@ -237,6 +238,7 @@ class NeuralNetwork():
         # self.num_units_per_layer = num_units_per_layer
         self._init_weight_forward_prop_data_list()
         self.dataset_size = 0  # Dataset size to be initialized in fit()
+        self.batch_size = batch_size
 
     def _forward_prop(self, x):
         """
@@ -452,51 +454,77 @@ class NeuralNetwork():
             Number of epochs to show the cost if verbose is set to true
         """
 
-        if self.optimizer == opt.SGD:
-            self.dataset_size = 1
+        def process_verbose(y, y_hat, batch_index, batch_loop_count, epoch_index, epoch_size, dataset_size):
+            """
+            Helper function to output cost at regular intervals
+
+            Parameters
+            ----------
+            y: ndarray
+                Ground-truth
+            y_hat: ndarray
+                Predicted values
+            batch_index: int
+                0-based batch index within the current epoch
+            batch_loop_count: int
+                Total number of batch loops within a epoch
+            epoch_index: int
+                0-based epoch index
+            epoch_size: int
+                Number of epochs
+            dataset_size: int
+                Dataset size in this batch
+            """
+            cost = -1
+            if self.cost_function == cf.CROSS_ENTROPY:
+                cost = cf.mean_cross_entropy(y, y_hat)
+            elif self.cost_function == cf.MEAN_SQUARED_ERROR:
+                cost = cf.mean_squared_error(y, y_hat)
+
+            if (self.batch_size >= 32):
+                print("[Epoch %d/%d - Batch %d/%d] Cost: %.07f. Batch size: %d" %
+                      (epoch_index+1, epoch_size, batch_index + 1, batch_loop_count, cost, dataset_size))
+            else:
+                if (batch_index % 100 == 0):
+                    print("[Epoch %d/%d - Batch %d/%d] Cost: %.07f. Batch size: %d" %
+                          (epoch_index + 1, epoch_size, batch_index + 1, batch_loop_count, cost, dataset_size))
+
+        if self.optimizer in [opt.SGD, opt.ADAM]:
+
+            if self.optimizer == opt.ADAM:
+                self.optimizer_settings.beta1_to_t = self.optimizer_settings.beta1
+                self.optimizer_settings.beta2_to_t = self.optimizer_settings.beta2
 
             for i in range(epochs):
-                for j in range(x.shape[0]):
-                    x_one = x[j:j + 1]
-                    y_one = y[j:j + 1]
-                    y_hat = self._forward_prop(x_one)
+
+                next_k = 0
+                loop_count = int(x.shape[0] / self.batch_size)  # for m = 5, batch_size = 2, this results in [0, 1]
+                for j in range(loop_count):
+
+                    self.dataset_size = self.batch_size
+                    k = j * self.dataset_size
+                    next_k = k + self.dataset_size
+                    x_sub = x[k:next_k]
+                    y_sub = y[k:next_k]
+                    y_hat = self._forward_prop(x_sub)
 
                     if verbose:
-                        cost = -1
-                        if self.cost_function == cf.CROSS_ENTROPY:
-                            cost = cf.mean_cross_entropy(y_one, y_hat)
-                        elif self.cost_function == cf.MEAN_SQUARED_ERROR:
-                            cost = cf.mean_squared_error(y_one, y_hat)
+                        process_verbose(y_sub, y_hat, j, loop_count, i, epochs, self.dataset_size)
 
-                        if (j % 100 == 0):
-                            print("[%d %d/%d epochs] Cost: %.07f" % (j, i + 1, epochs, cost))
+                    self._backprop(x_sub, y_sub, y_hat)
 
-                    self._backprop(x_one, y_one, y_hat)
-
-
-        elif self.optimizer == opt.ADAM:
-            self.dataset_size = 1
-
-            self.optimizer_settings.beta1_to_t = self.optimizer_settings.beta1
-            self.optimizer_settings.beta2_to_t = self.optimizer_settings.beta2
-
-            for i in range(epochs):
-                for j in range(x.shape[0]):
-                    x_one = x[j:j + 1]
-                    y_one = y[j:j + 1]
-                    y_hat = self._forward_prop(x_one)
+                # remainder
+                self.dataset_size = x.shape[0] - next_k
+                if self.dataset_size > 0:
+                    k = next_k
+                    x_sub = x[k:k + self.dataset_size]
+                    y_sub = y[k:k + self.dataset_size]
+                    y_hat = self._forward_prop(x_sub)
 
                     if verbose:
-                        cost = -1
-                        if self.cost_function == cf.CROSS_ENTROPY:
-                            cost = cf.mean_cross_entropy(y_one, y_hat)
-                        elif self.cost_function == cf.MEAN_SQUARED_ERROR:
-                            cost = cf.mean_squared_error(y_one, y_hat)
+                        process_verbose(y_sub, y_hat, j+1, loop_count+1, i, epochs, self.dataset_size)
 
-                        if (j % 100 == 0):
-                            print("[%d %d/%d epochs] Cost: %.07f" % (j, i + 1, epochs, cost))
-
-                    self._backprop(x_one, y_one, y_hat)
+                    self._backprop(x_sub, y_sub, y_hat)
 
         else:  # Batch gradient
             self.dataset_size = x.shape[0]
