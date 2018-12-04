@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """
 Example code to demo NeuralNetwork class for digit recognition using MNIST data.
+This example uses MSE as the cost function and outputs a floating number, which is then compared
+against the ground truth after rounded.
 
 __author__ = "Hide Inada"
 __copyright__ = "Copyright 2018, Hide Inada"
@@ -36,6 +38,7 @@ def example():
 
     # Download mnist data via Keras API
     (x, y), (x_test, y_test) = mnist.load_data() # https://keras.io/datasets/
+    y_reshaped = y.reshape((y.shape[0], 1))
 
     # Change the value from 0<= x <= 255 in UINT8 to 0 <= x <= 1 in float
     x = x / 255.0
@@ -44,25 +47,24 @@ def example():
     # Flatten
     x_flat = x.reshape((x.shape[0], 28*28))
     x_test_flat = x_test.reshape((x_test.shape[0], 28*28))
-    y_oh = keras.utils.to_categorical(y, 10) * 1.0
-    y_test_oh = keras.utils.to_categorical(y_test, 10)
 
     model = Model(num_input=28*28)
     model.add(Layer(512, activation=af.RELU))
-#    model.add(Layer(128, activation=af.RELU))
     model.add(Layer(10, activation=af.SIGMOID))
+    model.add(Layer(1, activation=af.RELU))
 
-    nn = NeuralNetwork(model, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY, optimizer=opt.SGD)  # layer no: 0, 1, 2
+    nn = NeuralNetwork(model, learning_rate=0.01, cost_function=cf.MEAN_SQUARED_ERROR, optimizer=opt.SGD,
+                       batch_size=32)
 
-    nn.fit(x_flat, y_oh, epochs=2, verbose=True, interval=1)
+    nn.fit(x_flat, y_reshaped, epochs=100, verbose=True, interval=1)
 
     # predict
-    y_hat_oh = nn.predict(x_test_flat)
-    total_size = y_hat_oh.shape[0]
-    y_hat_int = np.argmax(y_hat_oh, axis=1)  # to int from one-hot vector
-
-    matched_indices = (y_hat_int == y_test)
-    matched_count = y_test[matched_indices].shape[0]
+    y_hat = nn.predict(x_test_flat)
+    total_size = y_hat.shape[0]
+    y_hat = np.around(y_hat)
+    y_hat = y_hat.reshape((y_hat.shape[0])) # To 1-D
+    matched_indices = (y_hat == y_test)
+    matched_count = y_hat[matched_indices].shape[0]
     print("Matched: %d out of Total: %d (%f percent)" % (matched_count, total_size, matched_count*100/total_size))
 
 def main():

@@ -240,7 +240,7 @@ class NeuralNetwork():
         self.dataset_size = 0  # Dataset size to be initialized in fit()
         self.batch_size = batch_size
 
-    def _forward_prop(self, x):
+    def _forward_prop(self, x, output_layer_index=-1):
         """
         Forward propagation
 
@@ -248,6 +248,9 @@ class NeuralNetwork():
         ----------
         x: ndarray
             Input data
+        output_layer_index: int
+            1-based layer index to output.  If set to -1, forward prop proceeds to the last layer.
+            This is used to output the activation of an intermediate layer.
 
         Returns
         -------
@@ -257,7 +260,12 @@ class NeuralNetwork():
         a = x  # For the first layer, assign input as the activation
         self.a[0] = a
 
-        for i in range(self.num_layers):
+        if output_layer_index != -1:
+            loop_count = output_layer_index
+        else:
+            loop_count = self.num_layers
+
+        for i in range(loop_count):
             a = self._forward_prop_one_layer(a, i + 1)
 
         return (a)
