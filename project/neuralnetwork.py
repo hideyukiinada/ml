@@ -177,6 +177,7 @@ class NeuralNetwork():
         self.gradient_bias = list_with_n_elements(1)
         self.z = list_with_n_elements(self.num_layers + 1)
         self.a = list_with_n_elements(self.num_layers + 1)
+        self.layer_locked = [False] * (self.num_layers + 1)
 
         # Create a list for holding references to moment vectors for ADAM
         if self.optimizer == opt.ADAM:
@@ -210,7 +211,7 @@ class NeuralNetwork():
                 self.vt_bias.append(np.zeros(b.shape))
 
     def __init__(self, model, cost_function=cf.MEAN_SQUARED_ERROR, learning_rate=0.001, optimizer=opt.BATCH,
-                 optimizer_settings=None, batch_size=1):
+                 optimizer_settings=None, batch_size=1, use_layer_from=None):
         """
         Initialize the class.
 
@@ -227,6 +228,16 @@ class NeuralNetwork():
             Optimizer parameters
         batch_size: int
             Size of the batch
+        use_layer_from: list
+            Dictionary containing a list of objects to share one or more layers with in the read-only mode.
+            Namely, during the backprop of this object, weights on those layers will not be updated.
+
+            Example:
+              use_layer_from=[{"model": nn_discriminator,
+                                                                "layer_map": [{"from": 3, "to": 1},
+                                                                              {"from": 4, "to": 2}]}],
+
+            Use nn_discriminator object's 3rd and 4th layers as the 1st and 2nd layer of this model.
         """
 
         self.model = model
@@ -239,7 +250,7 @@ class NeuralNetwork():
         self._init_weight_forward_prop_data_list()
         self.dataset_size = 0  # Dataset size to be initialized in fit()
         self.batch_size = batch_size
-
+        self.use_layer_from = use_layer_from
     def _forward_prop(self, x, output_layer_index=-1):
         """
         Forward propagation
@@ -450,14 +461,16 @@ class NeuralNetwork():
                 mt_bias_hat = self.mt_bias[layer_index] / (1.0 - beta1_to_t)
                 vt_bias_hat = self.vt_bias[layer_index] / (1.0 - beta2_to_t)
 
-                self.weight[layer_index] -= self.learning_rate * mt_weight_hat / (
-                        np.sqrt(vt_weight_hat) + epsilon)
-                self.bias[layer_index] -= self.learning_rate * mt_bias_hat / (
-                        np.sqrt(vt_bias_hat) + epsilon)
+                if self.layer_locked[layer_index] is False: # Do not update if the layer is borrowed from other model.
+                    self.weight[layer_index] -= self.learning_rate * mt_weight_hat / (
+                            np.sqrt(vt_weight_hat) + epsilon)
+                    self.bias[layer_index] -= self.learning_rate * mt_bias_hat / (
+                            np.sqrt(vt_bias_hat) + epsilon)
 
             else:
-                self.weight[layer_index] -= self.learning_rate * self.gradient_weight[layer_index]
-                self.bias[layer_index] -= self.learning_rate * self.gradient_bias[layer_index]
+                if self.layer_locked[layer_index] is False:
+                    self.weight[layer_index] -= self.learning_rate * self.gradient_weight[layer_index]
+                    self.bias[layer_index] -= self.learning_rate * self.gradient_bias[layer_index]
 
         if self.optimizer == opt.ADAM:
             self.optimizer_settings.beta1_to_t *= self.optimizer_settings.beta1
@@ -515,6 +528,24 @@ class NeuralNetwork():
                 if (batch_index % 100 == 0):
                     print("[Epoch %d/%d - Batch %d/%d] Cost: %.07f. Batch size: %d" %
                           (epoch_index + 1, epoch_size, batch_index + 1, batch_loop_count, cost, dataset_size))
+
+
+        # check to see if we should use layers from other object
+        if self.use_layer_from is not None:
+            for other_object in self.use_layer_from:
+                other_model = other_object["model"]
+
+                mappings = other_object["layer_map"]
+
+                for mapping in mappings:
+                    source = mapping["from"]
+                    target = mapping["to"]
+
+                    #print("Using layer %d from other model as this model's layer %d" % (source, target))
+
+                    self.weight[target] = other_model.weight[source]
+                    self.bias[target] = other_model.bias[source]
+                    self.layer_locked[target] = True
 
         if self.optimizer in [opt.SGD, opt.ADAM]:
 

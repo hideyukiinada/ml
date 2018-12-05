@@ -1,0 +1,134 @@
+#!/usr/bin/env python
+"""
+Example code to demo GAN (Generative Adversarial Network) using the NeuralNetwork class and MNIST data
+
+__author__ = "Hide Inada"
+__copyright__ = "Copyright 2018, Hide Inada"
+__license__ = "The MIT License"
+__email__ = "hideyuki@gmail.com"
+"""
+
+import os
+import logging
+
+import numpy as np
+from pathlib import Path
+import sys
+
+import keras
+from keras.datasets import mnist
+
+from PIL import Image
+
+from project.neuralnetwork import NeuralNetwork
+from project.neuralnetwork import Model
+from project.neuralnetwork import Layer
+from project.activationfunction import ActivationFunction as af
+from project.costfunction import CostFunction as cf
+from project.optimizer import Optimizer as opt
+
+DISCRIMINATOR_WEIGHTS_FILE_PATH = "../../weights/gan_discriminator.h5"
+GENERATOR_WEIGHTS_FILE_PATH = "../../weights/gan_generator.h5"
+TMPDIR = "../../tmp"
+
+log = logging.getLogger(__name__)
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
+
+
+def example():
+    """An example to show how to use NeuralNetwork class.
+
+    This file downloads MNIST data via Keras util, but does not use Keras functionality for neural network.
+    """
+    base_path = Path(TMPDIR)
+
+    # Download mnist data via Keras API
+    (x, y), (x_test, y_test) = mnist.load_data()  # https://keras.io/datasets/
+
+    # Change the value from 0<= x <= 255 in UINT8 to 0 <= x <= 1 in float
+    x = x / 255.0
+
+    # Flatten
+    x_real = x.reshape((x.shape[0], 28 * 28))
+
+    discriminator = Model(num_input=28 * 28)
+    discriminator.add(Layer(512, activation=af.RELU))
+    discriminator.add(Layer(1, activation=af.SIGMOID))
+
+    generator_discriminator = Model(num_input=100)
+    generator_discriminator.add(Layer(512, activation=af.RELU))
+    generator_discriminator.add(Layer(28 * 28, activation=af.SIGMOID))
+    generator_discriminator.add(Layer(512, activation=af.RELU))  # Needs to match discriminator
+    generator_discriminator.add(Layer(1, activation=af.SIGMOID))  # Needs to match discriminator
+
+    nn_discriminator = NeuralNetwork(discriminator, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY,
+                                     optimizer=opt.SGD)
+
+    discriminator_weight_path = Path(DISCRIMINATOR_WEIGHTS_FILE_PATH)
+    if discriminator_weight_path.exists():
+        log.info("Weight file detected. Loading.")
+        nn_discriminator.load(discriminator_weight_path)
+
+    nn_generator_discriminator = NeuralNetwork(generator_discriminator,
+                                               use_layer_from=[{"model": nn_discriminator,
+                                                                "layer_map": [{"from": 1, "to": 3},
+                                                                              {"from": 2, "to": 4}]}],
+
+                                               learning_rate=0.001, cost_function=cf.CROSS_ENTROPY,
+                                               optimizer=opt.SGD)
+
+    generator_weight_path = Path(GENERATOR_WEIGHTS_FILE_PATH)
+    if generator_weight_path.exists():
+        log.info("Weight file detected. Loading.")
+        nn_generator_discriminator.load(generator_weight_path)
+
+    epochs = 1
+
+    for e in range(epochs):
+        batch_size = 32
+        next_k = 0
+
+        loop_count = int(x_real.shape[0] / batch_size)
+        for j in range(loop_count):  # Ignore the remainder for now
+            # Generator first as we need to borrow trained layers from discriminator
+            y2 = np.ones((batch_size * 2, 1))
+            noise = np.random.rand(batch_size * 2, 100)
+
+            nn_generator_discriminator.fit(noise, y2, epochs=1, verbose=True, interval=1)
+
+            noise = np.random.rand(batch_size, 100)
+
+            generated_images = nn_generator_discriminator.predict_intermediate(noise, 2)
+            k = batch_size * j
+            x = np.concatenate((x_real[k:k + batch_size], generated_images))
+            y = np.concatenate((
+                np.ones((batch_size, 1)),  # true for actual MNIST images
+                np.zeros((batch_size, 1))  # false for generated images
+            ))
+
+            k = j * batch_size
+            next_k = k + batch_size
+
+            nn_discriminator.fit(x, y, epochs=1, verbose=True, interval=1)
+
+            if j % 100 == 0:
+
+                for p in range(generated_images.shape[0]):
+                    img = generated_images[p].reshape((28, 28))
+                    img *= 255.0
+                    img_pil = Image.fromarray(np.uint8(img))
+
+                    image_path = base_path / Path("%d.jpg" % (p))
+                    img_pil.save(image_path)
+
+    nn_discriminator.save(discriminator_weight_path)
+    nn_generator_discriminator.save(generator_weight_path)
+
+
+def main():
+    """Defines an application's main functionality"""
+    example()
+
+
+if __name__ == "__main__":
+    main()
