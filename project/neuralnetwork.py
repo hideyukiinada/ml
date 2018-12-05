@@ -319,6 +319,25 @@ class NeuralNetwork():
         """
         return self._forward_prop(x)
 
+    def predict_intermediate(self, x, output_layer_index):
+        """
+        Feedforward up to the layer specified.
+
+        Parameters
+        ----------
+        x: ndarray
+            Input data
+        output_layer_index: int
+            1-based layer index to output.  If set to -1, forward prop proceeds to the last layer.
+            This is used to output the activation of an intermediate layer.
+
+        Returns
+        -------
+        out: ndarray
+            Predicted values
+        """
+        return self._forward_prop(x, output_layer_index)
+
     def _backprop(self, x, y, y_hat):
         """
         Backpropagation
@@ -491,7 +510,7 @@ class NeuralNetwork():
 
             if (self.batch_size >= 32):
                 print("[Epoch %d/%d - Batch %d/%d] Cost: %.07f. Batch size: %d" %
-                      (epoch_index+1, epoch_size, batch_index + 1, batch_loop_count, cost, dataset_size))
+                      (epoch_index + 1, epoch_size, batch_index + 1, batch_loop_count, cost, dataset_size))
             else:
                 if (batch_index % 100 == 0):
                     print("[Epoch %d/%d - Batch %d/%d] Cost: %.07f. Batch size: %d" %
@@ -530,7 +549,7 @@ class NeuralNetwork():
                     y_hat = self._forward_prop(x_sub)
 
                     if verbose:
-                        process_verbose(y_sub, y_hat, j+1, loop_count+1, i, epochs, self.dataset_size)
+                        process_verbose(y_sub, y_hat, j + 1, loop_count + 1, i, epochs, self.dataset_size)
 
                     self._backprop(x_sub, y_sub, y_hat)
 

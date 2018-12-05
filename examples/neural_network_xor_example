@@ -67,7 +67,7 @@ def example():
     # Set the ground-truth of group b and c to 1
     y[b,] = 1.0
     y[c,] = 1.0
-    nn.fit(x, y, epochs=200000, verbose=True, interval=1000)
+    nn.fit(x, y, epochs=300000, verbose=True, interval=1000)
 
     # Predict
     x_test = np.array([[0.02, 0.03], [0.1, 1], [1, 0.02], [1, 1]])
