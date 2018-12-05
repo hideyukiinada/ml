@@ -92,11 +92,11 @@ def example():
         for j in range(loop_count):  # Ignore the remainder for now
             # Generator first as we need to borrow trained layers from discriminator
             y2 = np.ones((batch_size * 2, 1))
-            noise = np.random.rand(batch_size * 2, 100)
+            noise = np.random.uniform(size=(batch_size * 2, 100))
 
             nn_generator_discriminator.fit(noise, y2, epochs=1, verbose=True, interval=1)
 
-            noise = np.random.rand(batch_size, 100)
+            noise = np.random.uniform(size=(batch_size, 100))
 
             generated_images = nn_generator_discriminator.predict_intermediate(noise, 2)
             k = batch_size * j
@@ -111,7 +111,7 @@ def example():
 
             nn_discriminator.fit(x, y, epochs=1, verbose=True, interval=1)
 
-            if j % 100 == 0:
+            if j % 10 == 0:
 
                 for p in range(generated_images.shape[0]):
                     img = generated_images[p].reshape((28, 28))
