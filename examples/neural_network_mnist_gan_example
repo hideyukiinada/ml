@@ -2,6 +2,23 @@
 """
 Example code to demo GAN (Generative Adversarial Network) using the NeuralNetwork class and MNIST data
 
+Credit
+------
+[ZE] Zackory Erickson, https://github.com/Zackory/Keras-MNIST-GAN/blob/master/mnist_gan.py
+I used the above page as a reference for:
+- Use of Leaky ReLU in generator
+- Adam parameters
+- Use of normal distribution for the noise
+- Weight initialization parameter
+
+[SY] Shinya Yuki, https://elix-tech.github.io/ja/2017/02/06/gan.html
+I used the above page as a reference for:
+- Implementing GAN including what data to feed GAN for training
+
+Additional resources
+--------------------
+[IG] Ian Goodfellow et al, Generative Adversarial Networks, https://arxiv.org/abs/1406.2661, 2014
+
 __author__ = "Hide Inada"
 __copyright__ = "Copyright 2018, Hide Inada"
 __license__ = "The MIT License"
@@ -13,9 +30,7 @@ import logging
 
 import numpy as np
 from pathlib import Path
-import sys
 
-import keras
 from keras.datasets import mnist
 
 from PIL import Image
@@ -26,10 +41,14 @@ from project.neuralnetwork import Layer
 from project.activationfunction import ActivationFunction as af
 from project.costfunction import CostFunction as cf
 from project.optimizer import Optimizer as opt
+from project.optimizer import AdamOptimizer
+from project.weightparameter import WeightParameter as wparam
 
 DISCRIMINATOR_WEIGHTS_FILE_PATH = "../../weights/gan_discriminator.h5"
 GENERATOR_WEIGHTS_FILE_PATH = "../../weights/gan_generator.h5"
 TMPDIR = "../../tmp"
+NUM_IMAGES_TO_GENERATE = 32  # Number of sample images to generate
+IMAGE_GENERATION_INTERVAL = 10  # Controls how often you want to generate sample images
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
@@ -56,17 +75,20 @@ def example():
     discriminator.add(Layer(1, activation=af.SIGMOID))
 
     generator_discriminator = Model(num_input=100)
-    generator_discriminator.add(Layer(512, activation=af.RELU))
+    generator_discriminator.add(Layer(512, activation=af.LEAKY_RELU))
     generator_discriminator.add(Layer(28 * 28, activation=af.SIGMOID))
     generator_discriminator.add(Layer(512, activation=af.RELU))  # Needs to match discriminator
     generator_discriminator.add(Layer(1, activation=af.SIGMOID))  # Needs to match discriminator
 
-    nn_discriminator = NeuralNetwork(discriminator, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY,
-                                     optimizer=opt.SGD)
+    nn_discriminator = NeuralNetwork(discriminator, learning_rate=0.0002, cost_function=cf.CROSS_ENTROPY,
+
+                                     optimizer=opt.ADAM,
+                                     optimizer_settings=AdamOptimizer(beta1=0.5, beta2=0.999, epsilon=1e-8),
+                                     batch_size=32)
 
     discriminator_weight_path = Path(DISCRIMINATOR_WEIGHTS_FILE_PATH)
     if discriminator_weight_path.exists():
-        log.info("Weight file detected. Loading.")
+        log.info("Discriminator weight file detected. Loading.")
         nn_discriminator.load(discriminator_weight_path)
 
     nn_generator_discriminator = NeuralNetwork(generator_discriminator,
@@ -74,50 +96,60 @@ def example():
                                                                 "layer_map": [{"from": 1, "to": 3},
                                                                               {"from": 2, "to": 4}]}],
 
-                                               learning_rate=0.001, cost_function=cf.CROSS_ENTROPY,
-                                               optimizer=opt.SGD)
+                                               learning_rate=0.0002, cost_function=cf.CROSS_ENTROPY,  # Slower than D
+                                               optimizer=opt.ADAM,
+                                               optimizer_settings=AdamOptimizer(beta1=0.5, beta2=0.999, epsilon=1e-8),
+                                               batch_size=32,
+                                               weight_parameter=wparam(init_type=wparam.NORMAL, stddev=0.02))
 
     generator_weight_path = Path(GENERATOR_WEIGHTS_FILE_PATH)
     if generator_weight_path.exists():
-        log.info("Weight file detected. Loading.")
+        log.info("Generator weight file detected. Loading.")
         nn_generator_discriminator.load(generator_weight_path)
 
-    epochs = 1
+    noise = np.random.normal(size=(x_real.shape[0], 100))
 
+    batch_size = 64
+    epochs = 5
     for e in range(epochs):
-        batch_size = 32
         next_k = 0
 
         loop_count = int(x_real.shape[0] / batch_size)
+
+        print("Loop count: %d" % (loop_count))
+
         for j in range(loop_count):  # Ignore the remainder for now
-            # Generator first as we need to borrow trained layers from discriminator
-            y2 = np.ones((batch_size * 2, 1))
-            noise = np.random.uniform(size=(batch_size * 2, 100))
-
-            nn_generator_discriminator.fit(noise, y2, epochs=1, verbose=True, interval=1)
-
-            noise = np.random.uniform(size=(batch_size, 100))
-
-            generated_images = nn_generator_discriminator.predict_intermediate(noise, 2)
             k = batch_size * j
-            x = np.concatenate((x_real[k:k + batch_size], generated_images))
+            next_k = k + batch_size
+
+            # Generator first as we need to borrow trained layers from discriminator
+            y2 = np.ones((batch_size, 1))
+
+            # Feed noise and try to generate a real-looking fake to make discriminator think that it's real
+            nn_generator_discriminator.fit(noise[k:next_k], y2, epochs=1, verbose=True, interval=1)
+
+            # Generate fake images to feed to just discriminator this time
+            generated_images = nn_generator_discriminator.predict_intermediate(noise[k:next_k], 2)
+
+            x = np.concatenate((x_real[k:next_k], generated_images))
             y = np.concatenate((
                 np.ones((batch_size, 1)),  # true for actual MNIST images
                 np.zeros((batch_size, 1))  # false for generated images
             ))
 
-            k = j * batch_size
-            next_k = k + batch_size
-
             nn_discriminator.fit(x, y, epochs=1, verbose=True, interval=1)
 
-            if j % 10 == 0:
+            if j % IMAGE_GENERATION_INTERVAL == 0:
+                print("Generating...")
+                # Generate fake images to feed to just discriminator this time
+                test_images = nn_generator_discriminator.predict_intermediate(noise[0:NUM_IMAGES_TO_GENERATE, ], 2)
 
-                for p in range(generated_images.shape[0]):
-                    img = generated_images[p].reshape((28, 28))
+                img_prev = None
+                for p in range(test_images.shape[0]):
+                    img = test_images[p].reshape((28, 28)).copy()
+                    img_prev = img.copy()
                     img *= 255.0
                     img_pil = Image.fromarray(np.uint8(img))
-
                     image_path = base_path / Path("%d.jpg" % (p))
                     img_pil.save(image_path)
 

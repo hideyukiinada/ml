@@ -34,12 +34,14 @@ import sys
 import os
 import logging
 
+import math
 import numpy as np
 
 from .activationfunction import ActivationFunction as af
 from .costfunction import CostFunction as cf
 from .optimizer import Optimizer as opt
 from .weightpersistence import WeightPersistence as wp
+from .weightparameter import WeightParameter as wparam
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
@@ -193,14 +195,42 @@ class NeuralNetwork():
 
             # w initialization below is following the recommendation on http://cs231n.github.io/neural-networks-2/
             # min 100 to ensure that weights are small when the number of units is a few.
-            # w = np.random.randn(num_units_prev_layer, num_units_this_layer) * (min(1.0/100.0, math.sqrt(2.0/num_units_prev_layer)))
-            # w = np.random.randn(num_units_prev_layer, num_units_this_layer) / 100.0
-            w = np.random.randn(num_units_prev_layer, num_units_this_layer) * 0.1
+
+            if self.weight_parameter is None:
+                w = np.random.randn(num_units_prev_layer, num_units_this_layer) * 0.1
+            else:
+                if self.weight_parameter.init_type == wparam.NORMAL:
+                    w = np.random.normal(self.weight_parameter.mean, self.weight_parameter.stddev,
+                                         (num_units_prev_layer,
+                                          num_units_this_layer)) * self.weight_parameter.multiplier
+                elif self.weight_parameter.init_type == wparam.UNIFORM:
+                    w = np.random.uniform(self.weight_parameter.mean, self.weight_parameter.stddev,
+                                          (num_units_prev_layer,
+                                           num_units_this_layer)) * self.weight_parameter.multiplier
+                elif self.weight_parameter.init_type == wparam.ZERO:
+                    w = np.zeros((num_units_prev_layer, num_units_this_layer))
+                elif self.weight_parameter.init_type == wparam.LAYER_UNIT_COUNT_PROPORTIONAL:
+                    w = np.random.randn(num_units_prev_layer, num_units_this_layer) * math.sqrt(
+                    1.0 / num_units_prev_layer) * self.weight_parameter.multiplier
+                elif self.weight_parameter.init_type == wparam.LAYER_UNIT_COUNT_PROPORTIONAL2:
+                    w = np.random.randn(num_units_prev_layer, num_units_this_layer) * math.sqrt(
+                    2.0 / num_units_prev_layer) * self.weight_parameter.multiplier
+
             self.weight.append(w)
             self.gradient_weight.append(np.zeros(w.shape))
 
-            # b = np.random.rand(1, num_units_this_layer) * 1e-10  # See discussions on [IG] p.173
-            b = np.zeros((1, num_units_this_layer))  # FIXME TMP
+            if self.bias_parameter is None:
+                b = np.zeros((1, num_units_this_layer))
+            else:
+                if self.bias_parameter.init_type == wparam.NORMAL:
+                    b = np.random.normal(self.bias_parameter.mean, self.bias_parameter.stddev,
+                                         (1, num_units_this_layer)) * self.bias_parameter.multiplier
+                elif self.bias_parameter.init_type == wparam.UNIFORM:
+                    b = np.random.uniform(self.bias_parameter.mean, self.bias_parameter.stddev,
+                                          (1, num_units_this_layer)) * self.bias_parameter.multiplier
+                elif self.bias_parameter.init_type == wparam.ZERO:
+                    b = np.zeros((1, num_units_this_layer))
+
             self.bias.append(b)
             self.gradient_bias.append(np.zeros(b.shape))
 
@@ -211,7 +241,8 @@ class NeuralNetwork():
                 self.vt_bias.append(np.zeros(b.shape))
 
     def __init__(self, model, cost_function=cf.MEAN_SQUARED_ERROR, learning_rate=0.001, optimizer=opt.BATCH,
-                 optimizer_settings=None, batch_size=1, use_layer_from=None):
+                 optimizer_settings=None, batch_size=1, use_layer_from=None, weight_parameter=None,
+                 bias_parameter=None):
         """
         Initialize the class.
 
@@ -238,6 +269,10 @@ class NeuralNetwork():
                                                                               {"from": 4, "to": 2}]}],
 
             Use nn_discriminator object's 3rd and 4th layers as the 1st and 2nd layer of this model.
+        weight_parameter: WeightParameter
+            Contains parameters to initialize layer weights
+        bias_parameter: WeightParameter
+            Contains parameters to initialize layer biases
         """
 
         self.model = model
@@ -245,12 +280,15 @@ class NeuralNetwork():
         self.optimizer_settings = optimizer_settings
         self.cost_function = cost_function
         self.learning_rate = learning_rate
-        self.num_layers = len(model.layers()) - 1  # To exclude the input layer
-        # self.num_units_per_layer = num_units_per_layer
-        self._init_weight_forward_prop_data_list()
         self.dataset_size = 0  # Dataset size to be initialized in fit()
         self.batch_size = batch_size
         self.use_layer_from = use_layer_from
+        self.weight_parameter = weight_parameter
+        self.bias_parameter = bias_parameter
+
+        self.num_layers = len(model.layers()) - 1  # To exclude the input layer
+        self._init_weight_forward_prop_data_list()
+
     def _forward_prop(self, x, output_layer_index=-1):
         """
         Forward propagation
@@ -461,7 +499,7 @@ class NeuralNetwork():
                 mt_bias_hat = self.mt_bias[layer_index] / (1.0 - beta1_to_t)
                 vt_bias_hat = self.vt_bias[layer_index] / (1.0 - beta2_to_t)
 
-                if self.layer_locked[layer_index] is False: # Do not update if the layer is borrowed from other model.
+                if self.layer_locked[layer_index] is False:  # Do not update if the layer is borrowed from other model.
                     self.weight[layer_index] -= self.learning_rate * mt_weight_hat / (
                             np.sqrt(vt_weight_hat) + epsilon)
                     self.bias[layer_index] -= self.learning_rate * mt_bias_hat / (
@@ -529,7 +567,6 @@ class NeuralNetwork():
                     print("[Epoch %d/%d - Batch %d/%d] Cost: %.07f. Batch size: %d" %
                           (epoch_index + 1, epoch_size, batch_index + 1, batch_loop_count, cost, dataset_size))
 
-
         # check to see if we should use layers from other object
         if self.use_layer_from is not None:
             for other_object in self.use_layer_from:
@@ -541,7 +578,7 @@ class NeuralNetwork():
                     source = mapping["from"]
                     target = mapping["to"]
 
-                    #print("Using layer %d from other model as this model's layer %d" % (source, target))
+                    # print("Using layer %d from other model as this model's layer %d" % (source, target))
 
                     self.weight[target] = other_model.weight[source]
                     self.bias[target] = other_model.bias[source]
@@ -782,7 +819,6 @@ class NeuralNetwork():
         self.bias = bias
 
     def save(self, file_path):
-
         """
         Save the matrix weight in a file specified by file_path.
 
