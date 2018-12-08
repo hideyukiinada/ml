@@ -6,6 +6,8 @@ This directory contains implementation of neural network (NeuralNetwork class) a
 |---|---|---|
 | Main neural network code| neuralnetwork.py | Implementation of a plain-vanilla neural network built from scratch with numpy | |
 | Activation functions| activationfunction.py | Implementation of activation functions for neural network |
+| Convolution (cross-correlation) | Implementation of convolution (in ML terminology), which is actually cross-correlation |
 | Cost functions | costfunction.py | Implementation of cost functions for neural network including cross-entropy & MSE |
 | K-means | kmeans.py | Implementation of k-means clustering method. Notes: As the below Wikipedia article points out, there is no guarantee that this implementation finds the optimal clustering result. https://en.wikipedia.org/wiki/K-means_clustering |
+| Optimizer | Optimizer meta-data to be used with NeuralNetwork. Actual implementation is in NeuralNetwork. | |
 
