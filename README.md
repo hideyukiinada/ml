@@ -1,4 +1,4 @@
-# Machine learning implementations
+# Machine learning framework implementations
 This repository contains neural network implementations that I built from scratch using numpy.
 
 # Getting started
