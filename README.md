@@ -5,4 +5,6 @@ This repository contains neural network implementations that I built from scratc
 Have a look at [read me in examples](https://github.com/hideyukiinada/ml/blob/master/examples/readme.md) to get started.
 
 # Supported optimizers
-* Batch
+* Batch gradient descent
+* Mini-batch gradient descent/SGD
+* Adam
