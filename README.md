@@ -10,4 +10,7 @@ Have a look at [read me in examples](https://github.com/hideyukiinada/ml/blob/ma
 * Adam
 
 # Intended use
+* Understand how neural network works
+** Forward propagation
+** Back propagation and gradient descent 
 * Use as a playground to test various technologies in AI (e.g. new optimizer, new cost function, GAN). 
