@@ -30,10 +30,12 @@ __copyright__ = "Copyright 2018, Hide Inada"
 __license__ = "The MIT License"
 __email__ = "hideyuki@gmail.com"
 """
+
 import sys
 import os
 import logging
 
+from numba import jit
 import math
 import numpy as np
 
@@ -45,6 +47,28 @@ from .weightparameter import WeightParameter as wparam
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
+
+@jit(nopython=True)
+def forward_prop_affine_transform(a_prev, weight, bias):
+    """
+    Apply affine transformation for forward prop
+
+    Parameters
+    ----------
+    a_prev: ndarray
+        Previous layer's activation
+    weight: ndarray
+        Weight
+    bias: ndarray
+        Bias
+
+    Returns
+    -------
+    z: ndarray
+        Affine transform
+    """
+
+    return a_prev.dot(weight) + bias
 
 
 class Layer():
@@ -334,7 +358,8 @@ class NeuralNetwork():
             Activation function
         """
         # Affine transformation
-        z = a_prev.dot(self.weight[current_layer_index]) + self.bias[current_layer_index]
+        #z = a_prev.dot(self.weight[current_layer_index]) + self.bias[current_layer_index]
+        z = forward_prop_affine_transform(a_prev, self.weight[current_layer_index], self.bias[current_layer_index])
 
         self.z[current_layer_index] = z
 

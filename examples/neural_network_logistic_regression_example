@@ -10,6 +10,7 @@ __email__ = "hideyuki@gmail.com"
 
 import os
 import logging
+import time
 
 import numpy as np
 from project.neuralnetwork import NeuralNetwork
@@ -26,6 +27,7 @@ def example():
     """An example to demonstrate how to use NeuralNetwork class.
     """
 
+    start_time = time.monotonic()
     model = Model(num_input=2)
     model.add(Layer(5, activation=af.RELU))
     model.add(Layer(1, activation=af.SIGMOID))
@@ -57,8 +59,10 @@ def example():
     x_test = np.array([[0.02, 0.03], [0.1, 1], [1, 0.02], [1, 1]])
 
     y_hat = nn.predict(x_test)
-    print(y_hat)
+    end_time = time.monotonic()
 
+    print(y_hat)
+    print("Time elapsed: %.3f seconds" % (end_time - start_time))
 
 def main():
     """Defines an application's main functionality"""

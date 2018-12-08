@@ -9,12 +9,29 @@ __email__ = "hideyuki@gmail.com"
 """
 import os
 import logging
-
+from numba import jit
 import numpy as np
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
+@jit(nopython=True)
+def _sigmoid(z):
+    """
+    Calculates a sigmoid function.
+    This function was taken out of the ActivationFunction class to enable JIT.
+
+    Parameters
+    ----------
+    z: ndarray
+        Input
+
+    Returns
+    -------
+    out: ndarray
+        Output of the sigmoid function for input z
+    """
+    return 1.0 / (1.0 + np.e ** (-z))
 
 class ActivationFunction():
     NONE = 0
@@ -71,9 +88,10 @@ class ActivationFunction():
         out: ndarray
             Output of the sigmoid function for input z
         """
-        return 1.0 / (1.0 + np.e ** (-z))
+        return _sigmoid(z)
 
     @staticmethod
+    @jit(nopython=True)
     def d_sigmoid(z):
         """
         Calculates the derivative of a sigmoid function for input z.
@@ -88,9 +106,10 @@ class ActivationFunction():
         out: ndarray
             Derivative of a sigmoid function for input z
         """
-        return ActivationFunction.sigmoid(z) * (1.0 - ActivationFunction.sigmoid(z))
+        return _sigmoid(z) * (1.0 - _sigmoid(z))
 
     @staticmethod
+    @jit(nopython=True)
     def relu(z):
         """
         Calculates the ReLU function.
