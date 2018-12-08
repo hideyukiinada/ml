@@ -1,3 +1,5 @@
+# GAN - Generative Adversarial Network implementation from scratch
+
 What kind of painting do you think Picasso would produce if he were still alive today?
 Or, wouldn't it so cool if you can see another art by Andy Warhol?
 GAN, or Generative Adversarial Network has potential to bring these dreams come close to reality.
