@@ -110,7 +110,7 @@ def example():
     noise = np.random.normal(size=(x_real.shape[0], 100))
 
     batch_size = 64
-    epochs = 50
+    epochs = 100
     for e in range(epochs):
         next_k = 0
 
