@@ -7,8 +7,8 @@ In short, GAN consists of two software objects:
 * Generator
 * Discriminator
 
-Generator, who is responsible for generating a real-looking fake image from noise.
-Discriminator, who is responsible for telling the fake objects from real objects.
+Generator is responsible for generating a real-looking fake image from noise.
+Discriminator is responsible for telling the fake objects from real objects.
 During a training process, you alternate training for Discriminator and Generator.  As you iterate through many cycles, Generator learns to produce more real-looking fake images.
 Now GAN became very popular and there are many variants.  Most notably DCGAN and CYCLE GAN.  The latter can generate images of zebras from horse images!
 
