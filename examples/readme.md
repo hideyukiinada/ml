@@ -2,12 +2,6 @@ This directory contains example files related to this project.
 
 # File list under the examples directory
 
-## K-means
-
-| Summary| File name | Note | 
-|---|---|---|
-|K-means| kmeans_example | An example for k-means clustering with 5 clusters. ![sample](../assets/images/k-means-demo.png)|
-
 ## Using NeuralNetwork class
 ### Basic
 
@@ -45,4 +39,10 @@ This directory contains example files related to this project.
 |---|---|---|
 |Activation functions demo| activation_example | Activation function example code |
 |Cost functions demo| cost_example | Cost function example code |
+
+## K-means
+
+| Summary| File name | Note | 
+|---|---|---|
+|K-means| kmeans_example | An example for k-means clustering with 5 clusters. ![sample](../assets/images/k-means-demo.png)|
 
