@@ -8,3 +8,6 @@ Have a look at [read me in examples](https://github.com/hideyukiinada/ml/blob/ma
 * Batch gradient descent
 * Mini-batch gradient descent/SGD
 * Adam
+
+# Intended use
+* Use as a playground to test various technologies in AI (e.g. new optimizer, new cost function, GAN). 
