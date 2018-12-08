@@ -12,6 +12,7 @@ __copyright__ = "Copyright 2018, Hide Inada"
 __license__ = "The MIT License"
 __email__ = "hideyuki@gmail.com"
 """
+import numba
 import unittest
 import numpy as np
 from project.convolve import Convolve
@@ -26,7 +27,7 @@ class TestConvolve(unittest.TestCase):
         m = np.array([[1, 2], [3, 4]])
         k = np.array([[0.1, 0.2], [0.3, 0.4]])
 
-        actual = Convolve._pad_matrix(m, k)
+        actual = Convolve.pad_matrix(m, k)
         expected = np.array([[0, 0, 0, 0], [0, 1, 2, 0], [0, 3, 4, 0], [0, 0, 0, 0]])
 
         result = np.allclose(actual, expected)
@@ -39,7 +40,7 @@ class TestConvolve(unittest.TestCase):
         m = np.array([[1, 2], [3, 4]])
         k = np.array([[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]])
 
-        actual = Convolve._pad_matrix(m, k)
+        actual = Convolve.pad_matrix(m, k)
         expected = np.array([[0, 0, 0, 0], [0, 1, 2, 0], [0, 3, 4, 0], [0, 0, 0, 0]])
 
         result = np.allclose(actual, expected)
@@ -52,7 +53,7 @@ class TestConvolve(unittest.TestCase):
         m = np.array([[1, 2], [3, 4]])
         k = np.array([[0.1, 0.2, 0.3, 0.4], [0.5, 0.6, 0.7, 0.8], [0.9, 1.0, 1.1, 1.2], [1.3, 1.4, 1.5, 1.6]])
 
-        actual = Convolve._pad_matrix(m, k)
+        actual = Convolve.pad_matrix(m, k)
         expected = np.array([[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 1, 2, 0, 0], [0, 0, 3, 4, 0, 0],
                              [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]])
 
@@ -191,12 +192,14 @@ class TestConvolve(unittest.TestCase):
         for i in range(num_kernel_set):
             actual = Convolve.convolve_volume(m, k[i])
             output[i] = actual
+            # check shape
+            self.assertTrue(actual.shape == (64, 64), "Unexpected shape")
 
     def test_convolve_volume_output_8_over_training_set(self):
         """
         Test convolve layers.
         """
-        training_set_size = 10
+        training_set_size = 100
 
         m = np.ones((training_set_size, 3, 64, 64))  # 3 layer 2x2 matrix
         m[1] = m[1] * 2.0
