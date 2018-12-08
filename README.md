@@ -1,5 +1,5 @@
 # Neural Network Implementations
-This repository contains source code for the neural network (_NeuralNetwork_ class) that I implemented from scratch using numpy.  [Examples](https://github.com/hideyukiinada/ml/blob/master/examples) directory contains scripts that use NeuralNetwork class to solve specific problems.
+This repository contains source code for the neural network (_NeuralNetwork_ class) that I implemented from scratch using numpy.  [Examples](https://github.com/hideyukiinada/ml/blob/master/examples) directory contains scripts that use NeuralNetwork class to solve specific problems. In addition [web_examples/mnist](https://github.com/hideyukiinada/ml/tree/master/web_examples/mnist) directory contains a sample webapp that you can use to recognize your own handwriting using the model that you train.
 
 # Getting started
 Have a look at [read me in examples](https://github.com/hideyukiinada/ml/blob/master/examples/readme.md) to get started.
