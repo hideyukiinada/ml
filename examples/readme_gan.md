@@ -21,7 +21,7 @@ Discriminator is responsible for recognizing the fake images from the real ones.
 During a training process, you alternate training for Discriminator and Generator.  As you iterate through many cycles, Generator learns to produce more real-looking fake images.
 Now GAN has become very popular and there are many variants.  Most notably [DCGAN](https://arxiv.org/abs/1511.06434) and [CycleGAN](https://junyanz.github.io/CycleGAN/).  The latter can generate images of zebras from horse images!
 
-In this article, I would like to explaine how I implemented GAN to generate digit (number) looking images from scratch.
+In this article, I would like to discuss how I implemented GAN to generate digit (number) looking images from scratch.
 
 ## Goal of this project
 The objective of this project is to feed 60,000 digit images from [the MNIST database
