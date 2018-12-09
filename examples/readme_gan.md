@@ -17,7 +17,7 @@ In short, GAN consists of two software objects:
 Generator is responsible for generating a real-looking fake image from noise.
 Discriminator is responsible for telling the fake objects from real objects.
 During a training process, you alternate training for Discriminator and Generator.  As you iterate through many cycles, Generator learns to produce more real-looking fake images.
-Now GAN became very popular and there are many variants.  Most notably DCGAN and Cycle GAN.  The latter can generate images of zebras from horse images!
+Now GAN became very popular and there are many variants.  Most notably [DCGAN](https://arxiv.org/abs/1511.06434) and [CycleGAN](https://junyanz.github.io/CycleGAN/).  The latter can generate images of zebras from horse images!
 
 In this article, I would like to dive a little deeper and explaine how I implemented GAN to generate digit (number) looking images from scratch.
 
