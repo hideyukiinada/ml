@@ -38,7 +38,7 @@ This directory contains example files related to this project.
 
 | Summary| File name | Note | 
 |---|---|---|
-|GAN demo to generate MNIST-like digit | neural_network_mnist_gan_example | GAN example code |
+|GAN demo to generate MNIST-like digit | neural_network_mnist_gan_example | GAN example code. Please see [details](https://github.com/hideyukiinada/ml/blob/master/examples/readme_gan.md) |
 
 ### Helper class examples
 
