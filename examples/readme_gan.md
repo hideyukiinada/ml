@@ -63,6 +63,8 @@ To train Discriminator, you feed the following data to it:
 
 ![Sample Images](https://github.com/hideyukiinada/ml/blob/master/assets/images/discriminator_input.png)
 
+Initially, it should be easy for Discriminators to distinguish real digits from generate fake images.  However, as Generator learns to produce real-looking fake images, it should be more difficult for Discriminator to identify the fake.
+
 ### Training Generator
 To train Generator, you feed the following data to it:
 * Small batch of noise as samples.  1 is fed for each of the sample as the ground-truth for these. 
