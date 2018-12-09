@@ -53,3 +53,4 @@ generator_discriminator.add(Layer(28 * 28, activation=af.SIGMOID))
 generator_discriminator.add(Layer(512, activation=af.RELU))  # Needs to match discriminator
 generator_discriminator.add(Layer(1, activation=af.SIGMOID))  # Needs to match discriminator
 ```
+Generator needs Discriminator to judge if its output is real or fake, so the last two layers are shared with the Discriminator instance.  However, when the gradient of the error is back propagated during the training of generator, these two layers are locked so that weights and biases are not updated for these two layers.
