@@ -61,5 +61,6 @@ To train Generator, you feed the following data to it:
 
 Generator converts this noise to what it thinks is a real-looking digit image. Whether the digit is real or fake is judged by Discriminator. What this means is that Generator will try to adjust itself so that it generates an image that looks real to Discriminator. 
 
-
+## Code
+Script is available [here](https://github.com/hideyukiinada/ml/blob/master/examples/neural_network_mnist_gan_example).
 
