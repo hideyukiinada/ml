@@ -68,7 +68,7 @@ Initially, it should be easy for Discriminators to distinguish real digits from 
 
 ### Training Generator
 To train Generator, you feed the following data to it:
-* Small batch of noise as samples.  1 is fed for each of the sample as the ground-truth for these. 
+* Small batch of noise as input.  1 is fed for each of the sample as the ground-truth for these. 
 
 Generator converts this noise to what it thinks is a real-looking digit image. Whether the digit is real or fake is judged by Discriminator. What this means is that Generator will try to adjust itself so that it generates an image that looks real to Discriminator. 
 
