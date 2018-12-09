@@ -72,6 +72,9 @@ The main source code is available under the examples directory.  You need to run
 
 If you clone this repo, you should get other helper classes.
 
+### Dependency on machine learning framework
+This GAN is using the machine learning framework that I built from scratch using numpy, so there is no dependency on any other framework except for Keras to download MNIST data (see below).
+
 ### Dependencies on Keras to download MNIST data
 The script uses Keras to download MNIST data, but does not rely on Keras for anything else, so if you already have MNIST data, you can replace the line below with your code to access your version of MNIST.
 ```
