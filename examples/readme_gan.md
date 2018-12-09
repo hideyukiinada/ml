@@ -49,7 +49,7 @@ generator_discriminator.add(Layer(1, activation=af.SIGMOID))  # Needs to match d
 Generator needs Discriminator to judge if its output is real or fake, so the last two layers are shared with the Discriminator instance.  However, when the gradient of the error is back propagated during the training of generator, these two layers are locked so that weights and biases are not updated for these two layers.
 
 
-
+## Training
 ### Training Discriminator
 To train Discriminator, you feed the following data to it:
 * Small batch of real MNIST digits as samples.  1 is fed for each of the sample as the ground-truth for these.
