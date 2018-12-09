@@ -22,7 +22,7 @@ Now GAN became very popular and there are many variants.  Most notably DCGAN and
 In this article, I would like to dive a little deeper and explaine how I implemented GAN to generate digit (number) looking images from scratch.
 
 ## Architecture
-![Sample Images](https://github.com/hideyukiinada/ml/blob/master/assets/svg/gan_architecture.svg)
+![Sample Images](https://github.com/hideyukiinada/ml/blob/master/assets/images/gan_architecture.png)
 
 The above diagram shows the overall architecture of the system.
 
