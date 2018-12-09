@@ -25,7 +25,7 @@ In this article, I would like to explaine how I implemented GAN to generate digi
 
 ## Goal of this project
 The objective of this project is to feed 60,000 digit images from [the MNIST database
-of handwritten digits](http://yann.lecun.com/exdb/mnist/) into the system for training and make Generator produce images that look like digits.
+of handwritten digits](http://yann.lecun.com/exdb/mnist/) into the GAN system for training and make Generator produce images that look like digits.
 
 ## Architecture
 ![Sample Images](https://github.com/hideyukiinada/ml/blob/master/assets/images/gan_architecture.png)
