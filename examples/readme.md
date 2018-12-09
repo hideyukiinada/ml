@@ -28,10 +28,17 @@ This directory contains example files related to this project.
 | Adam optimizer| neural_network_fashion_mnist_adam_example | |
 
 ### Loading & Saving Weights and Biases
+
 | Summary| File name | Note | 
 |---|---|---|
 |Example to save and load weights for the basic logistic regression | weight_persistence_example | Both weights and biases are saved to a hdf5 file. |
 |Example to save and load weights for MNIST | weight_persistence_mnist_example | __You need to run this script to test the web app under web_examples/mnist.__ |
+
+### GAN - Generative Adversarial Network
+
+| Summary| File name | Note | 
+|---|---|---|
+|GAN demo to generate MNIST-like digit | neural_network_mnist_gan_example | GAN example code |
 
 ### Helper class examples
 
