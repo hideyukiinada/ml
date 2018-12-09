@@ -69,6 +69,7 @@ Generator converts this noise to what it thinks is a real-looking digit image. W
 The main source code is available under the examples directory.  You need to run two scripts:
   * [Training script to train the model](https://github.com/hideyukiinada/ml/blob/master/examples/neural_network_mnist_gan_example)
   * [Prediction script to generate images using weights saved in training](https://github.com/hideyukiinada/ml/blob/master/examples/neural_network_mnist_gan_predict_example)
+
 If you clone this repo, you should get other helper classes.
 
 ### Dependencies on Keras to download MNIST data
