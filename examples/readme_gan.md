@@ -66,7 +66,10 @@ To train Generator, you feed the following data to it:
 Generator converts this noise to what it thinks is a real-looking digit image. Whether the digit is real or fake is judged by Discriminator. What this means is that Generator will try to adjust itself so that it generates an image that looks real to Discriminator. 
 
 ## Source code
-The main source code is available [here](https://github.com/hideyukiinada/ml/blob/master/examples/neural_network_mnist_gan_example).  If you clone this repo, you should get other helper classes.
+The main source code is available under the examples directory.  You need to run two scripts:
+  * [Training script to train the model](https://github.com/hideyukiinada/ml/blob/master/examples/neural_network_mnist_gan_example)
+  * [Prediction script to generate images using weights saved in training](https://github.com/hideyukiinada/ml/blob/master/examples/neural_network_mnist_gan_predict_example)
+If you clone this repo, you should get other helper classes.
 
 ### Dependencies on Keras to download MNIST data
 The script uses Keras to download MNIST data, but does not rely on Keras for anything else, so if you already have MNIST data, you can replace the line below with your code to access your version of MNIST.
