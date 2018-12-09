@@ -34,9 +34,10 @@ To train Generator, you feed the following data to it:
 Generator converts this noise to what it thinks is a real-looking digit image. Whether the digit is real or fake is judged by Discriminator. What this means is that Generator will try to adjust itself so that it generates an image that looks real to Discriminator. 
 
 ### Structure of Discriminator
+Discriminator consists of two-layer neural network:
 ```
-   discriminator = Model(num_input=28 * 28)
-    discriminator.add(Layer(512, activation=af.RELU))
-    discriminator.add(Layer(1, activation=af.SIGMOID))
+discriminator = Model(num_input=28 * 28)
+discriminator.add(Layer(512, activation=af.RELU))
+discriminator.add(Layer(1, activation=af.SIGMOID))
 ```
 
