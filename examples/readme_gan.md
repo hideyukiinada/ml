@@ -30,5 +30,13 @@ To train Discriminator, you feed the following data to it:
 ### Training Generator
 To train Generator, you feed the following data to it:
 1) Small batch of noise as samples.  1 is fed for each of the sample as the ground-truth for these. 
+
 Generator converts this noise to what it thinks is a real-looking digit image. Whether the digit is real or fake is judged by Discriminator. What this means is that Generator will try to adjust itself so that it generates an image that looks real to Discriminator. 
+
+### Structure of Discriminator
+```
+   discriminator = Model(num_input=28 * 28)
+    discriminator.add(Layer(512, activation=af.RELU))
+    discriminator.add(Layer(1, activation=af.SIGMOID))
+```
 
