@@ -5,7 +5,7 @@ What kind of painting do you think Picasso would produce if he were still alive 
 
 Or, wouldn't it be so cool if you could see a new piece of art by Andy Warhol?
 
-GAN, or Generative Adversarial Network has potential to bring these dreams come close to reality.
+GAN, or Generative Adversarial Network has the potential to bring these dreams come close to reality.
 GAN was invented by Mr. Ian Goodfellow in 2014.  You can refer to his original paper [Generative Adversarial Networks](https://arxiv.org/abs/1406.2661) if you are interested.
 
 ![Sample Images](https://github.com/hideyukiinada/ml/blob/master/assets/images/mnist-gan-example.jpg)
