@@ -39,6 +39,7 @@ discriminator = Model(num_input=28 * 28)
 discriminator.add(Layer(512, activation=af.RELU))
 discriminator.add(Layer(1, activation=af.SIGMOID))
 ```
+Discriminator uses binary crossentropy as the cost function so that when there is a mismatch between the ground-truth and prediction, the cost becomes very high.
 
 ### Structure of Generator
 Generator consists of two parts connected:
