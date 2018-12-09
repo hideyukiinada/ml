@@ -67,6 +67,9 @@ To train Generator, you feed the following data to it:
 
 Generator converts this noise to what it thinks is a real-looking digit image. Whether the digit is real or fake is judged by Discriminator. What this means is that Generator will try to adjust itself so that it generates an image that looks real to Discriminator. 
 
+## Issues to be addressed
+Training GAN is sensitive to hyperparameters as well as weights initialization.  I made multiple attempts to generate diverse digits but the last attempt as shown in the top of this page still suffers from some numbers output more frequently than others (mode collapse).
+
 ## Source code
 The main source code is available under the examples directory.  You need to run two scripts:
   * [Training script to train the model](https://github.com/hideyukiinada/ml/blob/master/examples/neural_network_mnist_gan_example)
