@@ -65,7 +65,7 @@ Generator converts this noise to what it thinks is a real-looking digit image. W
 The main source code is available [here](https://github.com/hideyukiinada/ml/blob/master/examples/neural_network_mnist_gan_example).  If you clone this repo, you should get other helper classes.
 
 ### Dependencies on Keras to download MNIST data
-The script uses Keras to download MNIST data, so if you already have MNIST data, you can replace the line below to access your version of MNIST.
+The script uses Keras to download MNIST data, but does not rely on Keras for anything else, so if you already have MNIST data, you can replace the line below to access your version of MNIST.
 ```
     (x, y), (x_test, y_test) = mnist.load_data()  # https://keras.io/datasets/
 ```
