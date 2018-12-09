@@ -41,3 +41,15 @@ discriminator.add(Layer(512, activation=af.RELU))
 discriminator.add(Layer(1, activation=af.SIGMOID))
 ```
 
+### Structure of Generator
+Generator consists of two parts connected:
+  1. Two-layer neural network with a vector of 100 random numbers as an input, 512 units on a hidden layer, flattened 28 pixel by 28 pixel on the output layer
+  2. Two-layer neural network from Discriminator
+  
+```
+generator_discriminator = Model(num_input=100)
+generator_discriminator.add(Layer(512, activation=af.LEAKY_RELU))
+generator_discriminator.add(Layer(28 * 28, activation=af.SIGMOID))
+generator_discriminator.add(Layer(512, activation=af.RELU))  # Needs to match discriminator
+generator_discriminator.add(Layer(1, activation=af.SIGMOID))  # Needs to match discriminator
+```
