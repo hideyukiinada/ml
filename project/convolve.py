@@ -334,7 +334,9 @@ class Convolve():
             (target_height, target_width) = _calculate_target_matrix_dimension(input_data_tensor[:, :, 0],
                                                                                kernel_tensor[:, :, 0, 0], paddings,
                                                                                strides)
-            bias = np.zeros((target_height, target_width, kernel_tensor.shape[3]))
+            # The below uncommented line has the same effect as this one due to broadcasting when added to output.
+            # bias = np.zeros((target_height, target_width, kernel_tensor.shape[3]))
+            bias = np.zeros((kernel_tensor.shape[3]))
 
         kernel_output_channel_num = kernel_tensor.shape[3]
         strides = strides
@@ -347,7 +349,9 @@ class Convolve():
         for i in range(kernel_output_channel_num):
             unbiased_out = Convolve.convolve_tensor(input_data_tensor, kernel_tensor[:, :, :, i], strides=strides,
                                                     use_padding=use_padding)
-            bias_to_add = bias[:, :, i]
+            #bias_to_add = bias[:, :, i]
+            bias_to_add = bias[i] # broadcast
+
             out_2d = unbiased_out + bias_to_add
 
             out_shape = out_2d.shape

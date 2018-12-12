@@ -251,7 +251,7 @@ class TestConvolve(unittest.TestCase):
         m = np.ones((training_set_size, 64, 64, 3))  # 3 input channel 64x64 matrix
 
         k = np.ones((3, 3, 3, 8))  # 3x3 kernel, 3 input, 8 output channels
-        bias = np.zeros((64, 64, 8))
+        bias = np.zeros((8))
 
         output = np.zeros((training_set_size, 64, 64, 8))
         expected = output.shape
@@ -274,7 +274,7 @@ class TestConvolve(unittest.TestCase):
         m = np.ones((training_set_size, 64, 64, 3))  # 3 input channel 64x64 matrix
 
         k = np.ones((3, 3, 3, 8))  # 3x3 kernel, 3 input, 8 output channels
-        bias = np.zeros((64, 64, 8))
+        bias = np.zeros((8))
 
         output = np.zeros((training_set_size, 64, 64, 8))
         expected = output.shape
@@ -295,7 +295,7 @@ class TestConvolve(unittest.TestCase):
         m = np.ones((training_set_size, 64, 64, 3))  # 3 input channel 64x64 matrix
 
         k = np.ones((5, 5, 3, 8))  # 3x3 kernel, 3 input, 8 output channels
-        bias = np.zeros((32, 32, 8))
+        bias = np.zeros((8))
 
         # output = np.zeros((training_set_size, 64, 64, 8))
         expected = (training_set_size, 32, 32, 8)
@@ -314,7 +314,7 @@ class TestConvolve(unittest.TestCase):
         m = np.ones((training_set_size, 64, 64, 3))  # 3 input channel 64x64 matrix
 
         k = np.ones((5, 5, 3, 8))  # 3x3 kernel, 3 input, 8 output channels
-        bias = np.zeros((30, 30, 8))
+        bias = np.zeros((8))
 
         # output = np.zeros((training_set_size, 64, 64, 8))
         expected = (training_set_size, 30, 30, 8)

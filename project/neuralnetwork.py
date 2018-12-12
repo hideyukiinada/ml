@@ -272,8 +272,8 @@ class NeuralNetwork():
                 channels = current_layer.channels
 
                 # FIXME - Support weight parameters
-                w = np.random.randn(channels, kernel_shape[0], kernel_shape[1], prev_channels)*0.1
-                b = np.zeros((channels, 1))
+                w = np.random.randn(kernel_shape[0], kernel_shape[1], prev_channels, channels)*0.1
+                b = np.zeros((channels))
 
             self.weight.append(w)
             self.gradient_weight.append(np.zeros(w.shape))
