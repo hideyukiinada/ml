@@ -46,6 +46,7 @@ from .weightpersistence import WeightPersistence as wp
 from .weightparameter import WeightParameter as wparam
 from .kernelparameter import KernelParameter as kp
 from .convolve import Convolve as conv
+from .convolve import _calculate_target_matrix_dimension
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
@@ -90,7 +91,7 @@ class Layer():
         self.layer_type = LayerType.DENSE #type of the layer
 
 class ConvLayer(Layer):
-    def __init__(self, kernel_shape, channels, strides=(1, 1), use_padding=True, activation=af.RELU):
+    def __init__(self, kernel_shape, channels, strides=(1, 1), use_padding=True, activation=af.RELU, flatten=False, layer_dim=None):
         """
         Initialize kernel parameters.
 
@@ -103,21 +104,27 @@ class ConvLayer(Layer):
         use_padding: bool
             True if m should be zero-padded before convolution.  This is to keep the output matrix the same size.
             False if no padding should be applied before convolution.
+        flatten: bool
+            Output a flattened layer.
+        layer_dim: tuple
+            Dimension of the layer.  This is specified only for the input layer which is the pseudo conv layer.
+            For other layers, this is calculated from other parameters during init.
         """
         self.kernel_shape = kernel_shape
         self.channels = channels
         self.strides = strides
         self.use_padding = use_padding
         self.activation = activation
-        self.num_units = 0
         self.layer_type = LayerType.CONV
+        self.flatten = flatten
+        self.layer_dim = layer_dim
 
 class Model():
     """
     Container for holding information for multiple layers
     """
 
-    def __init__(self, num_input=0, input_shape=None):
+    def __init__(self, num_input=0, layer_dim=None):
         """
         Initialize the model.
 
@@ -131,8 +138,9 @@ class Model():
         """
 
         self.layers = list()
-        if input_shape is not None:
-            self.layers.append(ConvLayer(kernel_shape=None, channels=input_shape[2], activation=af.NONE))
+
+        if layer_dim is not None:
+            self.layers.append(ConvLayer(layer_dim=layer_dim, kernel_shape=None, channels=layer_dim[2], activation=af.NONE))
         else:
             self.layers.append(Layer(num_units=num_input, activation=af.NONE))
 
@@ -222,10 +230,13 @@ class NeuralNetwork():
         # Allocate weight and bias for each layer
         for i in range(self.num_layers):
 
+            this_layer = self.model.layers[i + 1]
+            prev_layer = self.model.layers[i]
+
             if self.model.layers[i + 1].layer_type == LayerType.DENSE:
 
-                num_units_this_layer = self.model.layers[i + 1].num_units
-                num_units_prev_layer = self.model.layers[i].num_units
+                num_units_this_layer = this_layer.num_units
+                num_units_prev_layer = prev_layer.num_units
 
                 # w initialization below is following the recommendation on http://cs231n.github.io/neural-networks-2/
                 # min 100 to ensure that weights are small when the number of units is a few.
@@ -264,12 +275,28 @@ class NeuralNetwork():
                         b = np.zeros((1, num_units_this_layer))
 
             else: # if current layer is conv
-                prev_layer =  self.model.layers[i]
-                current_layer = self.model.layers[i+1]
+                if prev_layer.layer_dim is None:
+                    log.error("Fatal error.  Dimension of the previous layer is set to None.")
+                    sys.exit(1)
 
                 prev_channels = prev_layer.channels
-                kernel_shape = current_layer.kernel_shape # 0:height, 1:width
-                channels = current_layer.channels
+                prev_layer_height = prev_layer.layer_dim[0]
+                prev_layer_width = prev_layer.layer_dim[1]
+
+                kernel_shape = this_layer.kernel_shape # 0:height, 1:width
+                channels = this_layer.channels
+                strides = this_layer.strides
+                use_padding = this_layer.use_padding
+                kernel_height = kernel_shape[0]
+                kernel_width = kernel_shape[1]
+                padding_height = (kernel_shape[0] // 2)*2
+                padding_width = (kernel_shape[1] // 2)*2
+
+                target_height = (prev_layer_height + padding_height - kernel_height) // strides[0] + 1
+                target_width = (prev_layer_width + padding_width - kernel_width) // strides[1] + 1
+
+                this_layer.layer_dim = (target_height, target_width, channels)
+                this_layer.num_units = target_height * target_width * channels
 
                 # FIXME - Support weight parameters
                 w = np.random.randn(kernel_shape[0], kernel_shape[1], prev_channels, channels)*0.1
@@ -381,11 +408,18 @@ class NeuralNetwork():
             Activation function
         """
 
-        if self.model.layers[current_layer_index].layer_type == LayerType.CONV:
+        this_layer = self.model.layers[current_layer_index]
+
+        if this_layer.layer_type == LayerType.CONV:
             kernel = self.weight[current_layer_index]
             bias = self.bias[current_layer_index]
+            strides = this_layer.strides
+            use_padding = this_layer.use_padding
+            z = conv.convolve_tensor_dataset(a_prev, kernel, bias, strides=strides, use_padding=use_padding)
 
-            z = conv.convolve_tensor_dataset(a_prev, kernel, bias)
+            if this_layer.flatten == True:
+                z_shape = z.shape
+                z = z.reshape((z_shape[0],z_shape[1]*z_shape[2]*z_shape[3]))
 
         else: # Dense layer
             # Affine transformation
@@ -395,11 +429,11 @@ class NeuralNetwork():
         self.z[current_layer_index] = z
 
         # Activation
-        if self.model.layers[current_layer_index].activation == af.SIGMOID:
+        if this_layer.activation == af.SIGMOID:
             a = af.sigmoid(z)
-        elif self.model.layers[current_layer_index].activation == af.RELU:
+        elif this_layer.activation == af.RELU:
             a = af.relu(z)
-        elif self.model.layers[current_layer_index].activation == af.LEAKY_RELU:
+        elif this_layer.activation == af.LEAKY_RELU:
             a = af.leaky_relu(z)
         else:
             a = af.none(z)
