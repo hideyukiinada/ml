@@ -137,16 +137,16 @@ class TestConvolve(unittest.TestCase):
         result = np.array_equal(actual, expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
 
-    def test_convolve_volume_size_2(self):
+    def test_convolve_tensor_size_2(self):
         """
         Test convolve layers.
         """
-        m = np.ones((2, 2, 2))  # 2x2 matrix
-        m[1] = m[1] * 2.0
+        m = np.ones((2, 2, 2))  # 2x2 matrix and 2 channels
+        m[::, 1] = m[::, 1] * 2.0  # Second channel to all 2s.
 
-        k = np.ones((2, 3, 3))  # 3x3 kernel
+        k = np.ones((3, 3, 2))  # 3x3 kernel and 2 channels
 
-        actual = Convolve.convolve_volume(m, k)
+        actual = Convolve.convolve_tensor(m, k)
 
         self.assertTrue(actual.shape == (2, 2))
 
@@ -157,16 +157,16 @@ class TestConvolve(unittest.TestCase):
         result = np.array_equal(actual, expected_0 + expected_1)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
 
-    def test_convolve_volume_size_2_no_padding(self):
+    def test_size_2_no_padding(self):
         """
         Test convolve layers.
         """
-        m = np.ones((2, 2, 2))  # 2x2 matrix
-        m[1] = m[1] * 2.0
+        m = np.ones((2, 2, 2))  # 2x2 matrix and 2 channels
+        m[:, :, 1] = m[:, :, 1] * 2.0  # Second channel to all 2s.
 
-        k = np.ones((2, 2, 2))  # 3x3 kernel
+        k = np.ones((2, 2, 2))  # 2x2 kernel and 2 channels
 
-        actual = Convolve.convolve_volume(m, k, use_padding=False)
+        actual = Convolve.convolve_tensor(m, k, use_padding=False)
 
         self.assertTrue(actual.shape == (1, 1))
 
@@ -177,69 +177,150 @@ class TestConvolve(unittest.TestCase):
         result = np.array_equal(actual, expected_0 + expected_1)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
 
-    def test_convolve_volume_output_8(self):
+    def test_convolve_tensor_output_8(self):
         """
         Test convolve layers.
         """
-        m = np.ones((3, 64, 64))  # 3 layer 2x2 matrix
-        m[1] = m[1] * 2.0
+        m = np.ones((64, 64, 3))  # 3 layer 2x2 matrix
+        m[:, :, 1] = m[:, :, 1] * 2.0  # Second channel to all 2s.
+        k = np.ones((5, 5, 3, 8))  # 5x5 kernel with 3 channels, 8 output channels
+        expected_output_shape = np.zeros((64, 64, 8)).shape
 
-        k = np.ones((8, 3, 3, 3))  # 8 output, 3 layer 3x3 kernel
+        actual = Convolve.convolve_tensor_multi_channel(m, k)
 
-        output = np.zeros((8, 64, 64))
-        num_kernel_set = k.shape[0]
+        # check shape
+        self.assertTrue(actual.shape == expected_output_shape, "Unexpected shape")
 
-        for i in range(num_kernel_set):
-            actual = Convolve.convolve_volume(m, k[i])
-            output[i] = actual
-            # check shape
-            self.assertTrue(actual.shape == (64, 64), "Unexpected shape")
+    def test_convolve_tensor_output_8_no_padding(self):
+        """
+        Test convolve layers.
+        """
+        m = np.ones((64, 64, 3))  # 3 layer 2x2 matrix
+        m[:, :, 1] = m[:, :, 1] * 2.0  # Second channel to all 2s.
+        k = np.ones((5, 5, 3, 8))  # 5x5 kernel with 3 channels, 8 output channels
+        expected_output_shape = np.zeros((60, 60, 8)).shape
 
-    def test_convolve_volume_8_output_for_3_channel_input_training_set(self):
+        actual = Convolve.convolve_tensor_multi_channel(m, k, use_padding=False)
+
+        # check shape
+        self.assertTrue(actual.shape == expected_output_shape, "Unexpected shape")
+
+    def test_convolve_tensor_8_channel_output_for_3_channel_input_training_set(self):
         """
         Test convolve layers.
         """
         training_set_size = 100
 
-        m = np.ones((training_set_size, 3, 64, 64))  # 3 layer 64x64 matrix
+        m = np.ones((training_set_size, 64, 64, 3))  # 3 layer 64x64 matrix
         m[1] = m[1] * 2.0
 
-        k = np.ones((8, 3, 3, 3))  # 8 output, 3 input layer 3x3 kernel
+        k = np.ones((3, 3, 3, 8))  # 3x3 kernel with 3 channels, 8 output channels
 
-        output = np.zeros((training_set_size, 8, 64, 64))
+        expected = np.zeros((training_set_size, 64, 64, 8)).shape
+
+        actual = Convolve.convolve_tensor_dataset(m, k)
+
+        actual = actual.shape
+        result = (actual == expected)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
+
+    def test_convolve_tensor_2_channel_output_for_1_channel_input_training_set(self):
+        """
+        Test convolve layers.
+        """
+        training_set_size = 100
+
+        m = np.ones((training_set_size, 64, 64, 1))  # 1 layer matrix
+        k = np.ones((7, 7, 1, 5))  # 3x3 kernel with 3 channels, 5 output channels
+        output = np.zeros((training_set_size, 64, 64, 5))
         expected = output.shape
-        num_kernel_set = k.shape[1]
+        num_output_channels = k.shape[3]
+
+        actual = Convolve.convolve_tensor_dataset(m, k)
+
+        actual = actual.shape
+        result = (actual == expected)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
+
+    def test_convolve_tensor_8_channel_output_for_3_channel_input_with_bias(self):
+        """
+        Test convolve layers.
+        """
+        training_set_size = 100
+
+        m = np.ones((training_set_size, 64, 64, 3))  # 3 input channel 64x64 matrix
+
+        k = np.ones((3, 3, 3, 8))  # 3x3 kernel, 3 input, 8 output channels
+        bias = np.zeros((64, 64, 8))
+
+        output = np.zeros((training_set_size, 64, 64, 8))
+        expected = output.shape
+        # num_output_channels = k.shape[0]
 
         for i in range(training_set_size):
-            for j in range(num_kernel_set):
-                actual = Convolve.convolve_volume(m[i, :], k[j, :])
-                output[i, j] = actual
+            actual = Convolve.convolve_tensor_multi_channel(m[i, :], k, bias)
+            output[i] = actual
 
         actual = output.shape
         result = (actual == expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
 
-    def test_convolve_volume_2_output_for_1_channel_input_training_set(self):
+    def test_convolve_tensor_8_channel_output_for_3_channel_input_training_set_with_bias(self):
         """
         Test convolve layers.
         """
         training_set_size = 100
 
-        m = np.ones((training_set_size, 1, 64, 64))  # 1 layer matrix
-        m[1] = m[1] * 2.0
+        m = np.ones((training_set_size, 64, 64, 3))  # 3 input channel 64x64 matrix
 
-        k = np.ones((2, 1, 5, 5))  # 2 output, 1 input layer 5x5 kernel
+        k = np.ones((3, 3, 3, 8))  # 3x3 kernel, 3 input, 8 output channels
+        bias = np.zeros((64, 64, 8))
 
-        output = np.zeros((training_set_size, 2, 64, 64))
+        output = np.zeros((training_set_size, 64, 64, 8))
         expected = output.shape
-        num_kernel_set = k.shape[1]
+        # num_output_channels = k.shape[0]
 
-        for i in range(training_set_size):
-            for j in range(num_kernel_set):
-                actual = Convolve.convolve_volume(m[i, :], k[j, :])
-                output[i, j] = actual
+        actual = Convolve.convolve_tensor_dataset(m, k, bias)
 
-        actual = output.shape
+        actual = actual.shape
+        result = (actual == expected)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
+
+    def test_convolve_tensor_8_channel_output_for_3_channel_input_training_set_with_bias_strides_2(self):
+        """
+        Test convolve layers.
+        """
+        training_set_size = 5
+
+        m = np.ones((training_set_size, 64, 64, 3))  # 3 input channel 64x64 matrix
+
+        k = np.ones((5, 5, 3, 8))  # 3x3 kernel, 3 input, 8 output channels
+        bias = np.zeros((32, 32, 8))
+
+        # output = np.zeros((training_set_size, 64, 64, 8))
+        expected = (training_set_size, 32, 32, 8)
+        actual = Convolve.convolve_tensor_dataset(m, k, bias, strides=(2, 2))
+
+        actual = actual.shape
+        result = (actual == expected)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
+
+    def test_convolve_tensor_8_channel_output_for_3_channel_input_training_set_with_bias_strides_2_no_padding(self):
+        """
+        Test convolve layers.
+        """
+        training_set_size = 5
+
+        m = np.ones((training_set_size, 64, 64, 3))  # 3 input channel 64x64 matrix
+
+        k = np.ones((5, 5, 3, 8))  # 3x3 kernel, 3 input, 8 output channels
+        bias = np.zeros((30, 30, 8))
+
+        # output = np.zeros((training_set_size, 64, 64, 8))
+        expected = (training_set_size, 30, 30, 8)
+        actual = Convolve.convolve_tensor_dataset(m, k, bias, use_padding=False, strides=(2, 2))
+
+        actual = actual.shape
         result = (actual == expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
 

@@ -44,6 +44,8 @@ from .costfunction import CostFunction as cf
 from .optimizer import Optimizer as opt
 from .weightpersistence import WeightPersistence as wp
 from .weightparameter import WeightParameter as wparam
+from .kernelparameter import KernelParameter as kp
+from .convolve import Convolve as conv
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
@@ -70,6 +72,12 @@ def forward_prop_affine_transform(a_prev, weight, bias):
 
     return a_prev.dot(weight) + bias
 
+class LayerType():
+    """
+    Type of layers for neural network
+    """
+    DENSE = 0
+    CONV = 1
 
 class Layer():
     """
@@ -77,44 +85,56 @@ class Layer():
     """
 
     def __init__(self, num_units, activation=af.RELU):
-        self._num_units = num_units
-        self._activation = activation
+        self.num_units = num_units # number of units on the layer.
+        self.activation = activation # the activation function for the layer.
+        self.layer_type = LayerType.DENSE #type of the layer
 
-    def num_units(self):
+class ConvLayer(Layer):
+    def __init__(self, kernel_shape, channels, strides=(1, 1), use_padding=True, activation=af.RELU):
         """
-        Provides access to number of units on the layer.
+        Initialize kernel parameters.
 
-        Returns
-        -------
-        out: int
-            Number of units on the layer
+        Parameters
+        ----------
+        kernel_shape: tuple
+            Shape of kernel specified with a tuple (height, row, number of channels)
+        strides: tuple
+            Step size in each axis
+        use_padding: bool
+            True if m should be zero-padded before convolution.  This is to keep the output matrix the same size.
+            False if no padding should be applied before convolution.
         """
-        return self._num_units
-
-    def activation(self):
-        """
-        Provides access to the type of the activation function for the layer.
-
-        Returns
-        -------
-        out: ActivationFunction constant
-            Type of the activation
-        """
-        return self._activation
-
+        self.kernel_shape = kernel_shape
+        self.channels = channels
+        self.strides = strides
+        self.use_padding = use_padding
+        self.activation = activation
+        self.num_units = 0
+        self.layer_type = LayerType.CONV
 
 class Model():
     """
     Container for holding information for multiple layers
     """
 
-    def __init__(self, num_input):
+    def __init__(self, num_input=0, input_shape=None):
         """
         Initialize the model.
+
+        Parameters
+        ----------
+        num_input: int
+            Number of elements in each sample
+        input_shape: tuple
+            Shape of each sample, e.g. (64, 64, 3) for RGB.
+            if both num_input and input_shape are specified, input_shape takes precedence.
         """
 
-        self._layers = list()
-        self._layers.append(Layer(num_units=num_input, activation=af.NONE))
+        self.layers = list()
+        if input_shape is not None:
+            self.layers.append(ConvLayer(kernel_shape=None, channels=input_shape[2], activation=af.NONE))
+        else:
+            self.layers.append(Layer(num_units=num_input, activation=af.NONE))
 
     def add(self, layer):
         """
@@ -125,21 +145,7 @@ class Model():
         layer: Layer
             A single layer of the network
         """
-        self._layers.append(layer)
-
-    def layers(self):
-        """
-        Provides access to the layers list.
-
-        Returns
-        -------
-        layers: list
-            list of layers
-
-        Notes:
-        This includes the input as a layer at index 0.
-        """
-        return self._layers
+        self.layers.append(layer)
 
 
 class NeuralNetwork():
@@ -203,6 +209,7 @@ class NeuralNetwork():
         self.gradient_bias = list_with_n_elements(1)
         self.z = list_with_n_elements(self.num_layers + 1)
         self.a = list_with_n_elements(self.num_layers + 1)
+        self.kernel_parameter = list_with_n_elements(self.num_layers + 1)
         self.layer_locked = [False] * (self.num_layers + 1)
 
         # Create a list for holding references to moment vectors for ADAM
@@ -214,46 +221,62 @@ class NeuralNetwork():
 
         # Allocate weight and bias for each layer
         for i in range(self.num_layers):
-            num_units_this_layer = self.model.layers()[i + 1].num_units()
-            num_units_prev_layer = self.model.layers()[i].num_units()
 
-            # w initialization below is following the recommendation on http://cs231n.github.io/neural-networks-2/
-            # min 100 to ensure that weights are small when the number of units is a few.
+            if self.model.layers[i + 1].layer_type == LayerType.DENSE:
 
-            if self.weight_parameter is None:
-                w = np.random.randn(num_units_prev_layer, num_units_this_layer) * 0.1
-            else:
-                if self.weight_parameter.init_type == wparam.NORMAL:
-                    w = np.random.normal(self.weight_parameter.mean, self.weight_parameter.stddev,
-                                         (num_units_prev_layer,
-                                          num_units_this_layer)) * self.weight_parameter.multiplier
-                elif self.weight_parameter.init_type == wparam.UNIFORM:
-                    w = np.random.uniform(self.weight_parameter.mean, self.weight_parameter.stddev,
-                                          (num_units_prev_layer,
-                                           num_units_this_layer)) * self.weight_parameter.multiplier
-                elif self.weight_parameter.init_type == wparam.ZERO:
-                    w = np.zeros((num_units_prev_layer, num_units_this_layer))
-                elif self.weight_parameter.init_type == wparam.LAYER_UNIT_COUNT_PROPORTIONAL:
-                    w = np.random.randn(num_units_prev_layer, num_units_this_layer) * math.sqrt(
-                    1.0 / num_units_prev_layer) * self.weight_parameter.multiplier
-                elif self.weight_parameter.init_type == wparam.LAYER_UNIT_COUNT_PROPORTIONAL2:
-                    w = np.random.randn(num_units_prev_layer, num_units_this_layer) * math.sqrt(
-                    2.0 / num_units_prev_layer) * self.weight_parameter.multiplier
+                num_units_this_layer = self.model.layers[i + 1].num_units
+                num_units_prev_layer = self.model.layers[i].num_units
+
+                # w initialization below is following the recommendation on http://cs231n.github.io/neural-networks-2/
+                # min 100 to ensure that weights are small when the number of units is a few.
+
+                if self.weight_parameter is None:
+                    w = np.random.randn(num_units_prev_layer, num_units_this_layer) * 0.1
+                else:
+                    if self.weight_parameter.init_type == wparam.NORMAL:
+                        w = np.random.normal(self.weight_parameter.mean, self.weight_parameter.stddev,
+                                             (num_units_prev_layer,
+                                              num_units_this_layer)) * self.weight_parameter.multiplier
+                    elif self.weight_parameter.init_type == wparam.UNIFORM:
+                        w = np.random.uniform(self.weight_parameter.mean, self.weight_parameter.stddev,
+                                              (num_units_prev_layer,
+                                               num_units_this_layer)) * self.weight_parameter.multiplier
+                    elif self.weight_parameter.init_type == wparam.ZERO:
+                        w = np.zeros((num_units_prev_layer, num_units_this_layer))
+                    elif self.weight_parameter.init_type == wparam.LAYER_UNIT_COUNT_PROPORTIONAL:
+                        w = np.random.randn(num_units_prev_layer, num_units_this_layer) * math.sqrt(
+                        1.0 / num_units_prev_layer) * self.weight_parameter.multiplier
+                    elif self.weight_parameter.init_type == wparam.LAYER_UNIT_COUNT_PROPORTIONAL2:
+                        w = np.random.randn(num_units_prev_layer, num_units_this_layer) * math.sqrt(
+                        2.0 / num_units_prev_layer) * self.weight_parameter.multiplier
+
+                # Bias
+                if self.bias_parameter is None:
+                    b = np.zeros((1, num_units_this_layer))
+                else:
+                    if self.bias_parameter.init_type == wparam.NORMAL:
+                        b = np.random.normal(self.bias_parameter.mean, self.bias_parameter.stddev,
+                                             (1, num_units_this_layer)) * self.bias_parameter.multiplier
+                    elif self.bias_parameter.init_type == wparam.UNIFORM:
+                        b = np.random.uniform(self.bias_parameter.mean, self.bias_parameter.stddev,
+                                              (1, num_units_this_layer)) * self.bias_parameter.multiplier
+                    elif self.bias_parameter.init_type == wparam.ZERO:
+                        b = np.zeros((1, num_units_this_layer))
+
+            else: # if current layer is conv
+                prev_layer =  self.model.layers[i]
+                current_layer = self.model.layers[i+1]
+
+                prev_channels = prev_layer.channels
+                kernel_shape = current_layer.kernel_shape # 0:height, 1:width
+                channels = current_layer.channels
+
+                # FIXME - Support weight parameters
+                w = np.random.randn(channels, kernel_shape[0], kernel_shape[1], prev_channels)*0.1
+                b = np.zeros((channels, 1))
 
             self.weight.append(w)
             self.gradient_weight.append(np.zeros(w.shape))
-
-            if self.bias_parameter is None:
-                b = np.zeros((1, num_units_this_layer))
-            else:
-                if self.bias_parameter.init_type == wparam.NORMAL:
-                    b = np.random.normal(self.bias_parameter.mean, self.bias_parameter.stddev,
-                                         (1, num_units_this_layer)) * self.bias_parameter.multiplier
-                elif self.bias_parameter.init_type == wparam.UNIFORM:
-                    b = np.random.uniform(self.bias_parameter.mean, self.bias_parameter.stddev,
-                                          (1, num_units_this_layer)) * self.bias_parameter.multiplier
-                elif self.bias_parameter.init_type == wparam.ZERO:
-                    b = np.zeros((1, num_units_this_layer))
 
             self.bias.append(b)
             self.gradient_bias.append(np.zeros(b.shape))
@@ -310,7 +333,7 @@ class NeuralNetwork():
         self.weight_parameter = weight_parameter
         self.bias_parameter = bias_parameter
 
-        self.num_layers = len(model.layers()) - 1  # To exclude the input layer
+        self.num_layers = len(model.layers) - 1  # To exclude the input layer
         self._init_weight_forward_prop_data_list()
 
     def _forward_prop(self, x, output_layer_index=-1):
@@ -357,18 +380,26 @@ class NeuralNetwork():
         activation: str
             Activation function
         """
-        # Affine transformation
-        #z = a_prev.dot(self.weight[current_layer_index]) + self.bias[current_layer_index]
-        z = forward_prop_affine_transform(a_prev, self.weight[current_layer_index], self.bias[current_layer_index])
+
+        if self.model.layers[current_layer_index].layer_type == LayerType.CONV:
+            kernel = self.weight[current_layer_index]
+            bias = self.bias[current_layer_index]
+
+            z = conv.convolve_tensor_dataset(a_prev, kernel, bias)
+
+        else: # Dense layer
+            # Affine transformation
+            #z = a_prev.dot(self.weight[current_layer_index]) + self.bias[current_layer_index]
+            z = forward_prop_affine_transform(a_prev, self.weight[current_layer_index], self.bias[current_layer_index])
 
         self.z[current_layer_index] = z
 
         # Activation
-        if self.model.layers()[current_layer_index].activation() == af.SIGMOID:
+        if self.model.layers[current_layer_index].activation == af.SIGMOID:
             a = af.sigmoid(z)
-        elif self.model.layers()[current_layer_index].activation() == af.RELU:
+        elif self.model.layers[current_layer_index].activation == af.RELU:
             a = af.relu(z)
-        elif self.model.layers()[current_layer_index].activation() == af.LEAKY_RELU:
+        elif self.model.layers[current_layer_index].activation == af.LEAKY_RELU:
             a = af.leaky_relu(z)
         else:
             a = af.none(z)
@@ -457,11 +488,11 @@ class NeuralNetwork():
 
         """
         # Derivative of a with respect to z
-        if self.model.layers()[layer_index].activation() == af.SIGMOID:
+        if self.model.layers[layer_index].activation == af.SIGMOID:
             pa_pz = self.sigmoid_derivative_with_z(layer_index)
-        elif self.model.layers()[layer_index].activation() == af.RELU:
+        elif self.model.layers[layer_index].activation == af.RELU:
             pa_pz = self.relu_derivative_with_z(layer_index)
-        elif self.model.layers()[layer_index].activation() == af.LEAKY_RELU:
+        elif self.model.layers[layer_index].activation == af.LEAKY_RELU:
             pa_pz = self.leaky_relu_derivative_with_z(layer_index)
         else:
             pa_pz = self.none_derivative_with_z(layer_index)
