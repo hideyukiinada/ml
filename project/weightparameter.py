@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Save and load weights to/from a file on the file system
+Weight and bias initialization parameters
 
 __author__ = "Hide Inada"
 __copyright__ = "Copyright 2018, Hide Inada"
