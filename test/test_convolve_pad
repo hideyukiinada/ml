@@ -20,6 +20,32 @@ from project.convolve import Convolve
 
 class TestConvolvePad(unittest.TestCase):
 
+    def test_interweave(self):
+        """
+        Test interweaving with 0.
+        """
+        m = np.array([[1, 2], [3, 4]])
+
+        actual = Convolve.zero_interweave(m, 1)
+        expected = np.array([[1., 0., 2., 0.], [0, 0, 0, 0], [3, 0, 4, 0], [0, 0, 0, 0]])
+
+        result = np.allclose(actual, expected)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
+
+    def test_interweave2(self):
+        """
+        Test interweaving with 0.
+        """
+        m = np.array([[1, 2], [3, 4]])
+
+        actual = Convolve.zero_interweave(m, 2)
+        expected = np.array([[1., 0., 0., 2., 0., 0.], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0],[3, 0, 0, 4, 0, 0], [0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 0]])
+
+        result = np.allclose(actual, expected)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
+
+
     def test_pad_2x2_uniform(self):
         """
         Test against 2x2 filter

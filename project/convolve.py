@@ -167,7 +167,98 @@ def _pad_matrix_uniform(m, pad_count):
                       ((pad_count, pad_count), (pad_count, pad_count)),
                       'constant', constant_values=((0, 0), (0, 0)))
 
+
+def _zero_interweave(m, pad_count):
+    """
+    Add the same number of padding row and column to m in each axis.
+
+    For example, if you specify 1 in pad_count, the following matrix
+    1 2
+    3 4
+
+    is transformed to
+
+    1 0 2 0
+    0 0 0 0
+    3 0 4 0
+    0 0 0 0
+
+    Parameters
+    ----------
+    m: ndarray
+        Matrix
+    pad_count: int
+        Number of padding row and column to be added
+
+    Returns
+    -------
+    out: ndarray
+        Matrix padded with 0 along the edges.
+    """
+
+    # Vertically expand
+    m_shape_plus_1 = list(m.shape)  # (2, 2) to [2, 2]
+    m_shape_plus_1.append(1)  # (2, 2, 1)
+
+    m2 = m.reshape(m_shape_plus_1)
+
+    # Create zero matrix to add
+    zero_shape = (m2.shape[0], m2.shape[1] * pad_count, m2.shape[2])
+    m_zero = np.zeros(zero_shape)
+
+    # Add two matrices
+    m3 = np.concatenate((m2, m_zero), axis=1)
+    m3 = m3.reshape((m.shape[0] * (1 + pad_count), m.shape[1]))
+
+    # Horizontally expand
+    m = m3
+    m_shape_plus_1 = list(m.shape)  # (4, 2) to [4, 2]
+    m_shape_plus_1.append(1)  # (4, 2, 1)
+
+    m2 = m.reshape(m_shape_plus_1)
+
+    # Create zero matrix to add
+    zero_shape = (m2.shape[0], m2.shape[1], m2.shape[2] * pad_count)
+    m_zero = np.zeros(zero_shape)
+
+    # Add two matrices
+    m3 = np.concatenate((m2, m_zero), axis=2)
+    m3 = m3.reshape((m.shape[0], m.shape[1] * (1 + pad_count)))
+
+    return m3
+
+
 class Convolve():
+
+    @staticmethod
+    def zero_interweave(m, pad_count):
+        """
+        Add the same number of padding row and column to m in each axis.
+
+        For example, if you specify 1 in pad_count, the following matrix
+        1 2
+        3 4
+
+        is transformed to
+
+        1 0 2 0
+        0 0 0 0
+        3 0 4 0
+        0 0 0 0
+
+        Parameters
+        ----------
+        m: ndarray
+            Matrix
+        pad_count: int
+            Number of padding row and column to be added
+
+        Returns
+        -------
+        out: ndarray
+            Matrix padded with 0 along the edges.
+        """
+        return _zero_interweave(m, pad_count)
 
     @staticmethod
     def pad_matrix(m, kernel):
@@ -369,7 +460,7 @@ class Convolve():
 
         if bias is None:
             if use_padding:
-                paddings = ((kernel_tensor.shape[0] // 2)*2, (kernel_tensor.shape[1] // 2)*2)
+                paddings = ((kernel_tensor.shape[0] // 2) * 2, (kernel_tensor.shape[1] // 2) * 2)
             else:
                 paddings = (0, 0)
 
@@ -391,8 +482,8 @@ class Convolve():
         for i in range(kernel_output_channel_num):
             unbiased_out = Convolve.convolve_tensor(input_data_tensor, kernel_tensor[:, :, :, i], strides=strides,
                                                     use_padding=use_padding)
-            #bias_to_add = bias[:, :, i]
-            bias_to_add = bias[i] # broadcast
+            # bias_to_add = bias[:, :, i]
+            bias_to_add = bias[i]  # broadcast
 
             out_2d = unbiased_out + bias_to_add
 
