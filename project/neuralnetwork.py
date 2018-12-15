@@ -44,7 +44,6 @@ from .costfunction import CostFunction as cf
 from .optimizer import Optimizer as opt
 from .weightpersistence import WeightPersistence as wp
 from .weightparameter import WeightParameter as wparam
-from .kernelparameter import KernelParameter as kp
 from .convolve import Convolve as conv
 from .convolve import _calculate_target_matrix_dimension
 

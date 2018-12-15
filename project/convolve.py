@@ -144,6 +144,29 @@ def _pad_matrix(m, kernel):
                       'constant', constant_values=((0, 0), (0, 0)))
 
 
+def _pad_matrix_uniform(m, pad_count):
+    """
+    Add the same number of padding to both row and column before and after the matrix .
+    Total number of padding applied is pad_count*2 in each axis.
+
+    Parameters
+    ----------
+    m: ndarray
+        Matrix
+    pad_count: int
+        Number of padding to be added
+
+    Returns
+    -------
+    out: ndarray
+        Matrix padded with 0 along the edges.
+    """
+
+    # Zero-pad
+    return np.lib.pad(m,
+                      ((pad_count, pad_count), (pad_count, pad_count)),
+                      'constant', constant_values=((0, 0), (0, 0)))
+
 class Convolve():
 
     @staticmethod
