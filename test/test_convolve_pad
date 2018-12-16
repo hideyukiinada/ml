@@ -39,12 +39,12 @@ class TestConvolvePad(unittest.TestCase):
         m = np.array([[1, 2], [3, 4]])
 
         actual = Convolve.zero_interweave(m, 2)
-        expected = np.array([[1., 0., 0., 2., 0., 0.], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0],[3, 0, 0, 4, 0, 0], [0, 0, 0, 0, 0, 0],
-                             [0, 0, 0, 0, 0, 0]])
+        expected = np.array(
+            [[1., 0., 0., 2., 0., 0.], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [3, 0, 0, 4, 0, 0], [0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0]])
 
         result = np.allclose(actual, expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
-
 
     def test_pad_2x2_uniform(self):
         """
@@ -54,6 +54,45 @@ class TestConvolvePad(unittest.TestCase):
 
         actual = Convolve.pad_matrix_uniform(m, 1)
         expected = np.array([[0, 0, 0, 0], [0, 1, 2, 0], [0, 3, 4, 0], [0, 0, 0, 0]])
+
+        result = np.allclose(actual, expected)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
+
+    def test_pad_2x2_uniform_training_set(self):
+        """
+        Test against 2x2x2 filter
+        """
+        m = np.array([
+            [
+                [1, 2], [3, 4]
+            ], [
+                [5, 6], [7, 8]
+            ]
+        ])
+
+
+        l = list()
+        dataset_size = m.shape[0]
+        h = m.shape[1]
+        w = m.shape[2]
+
+        pad_count = 1
+        for i in range(m.shape[0]):
+            padded = Convolve.pad_matrix_uniform(m[i], pad_count)
+            l.append(padded)
+
+        l2 = np.array(l)
+        l3 = np.concatenate((l2))
+        actual= l3.reshape((dataset_size, h+2*pad_count, w+2*pad_count))
+
+        expected = np.array([
+            [
+                [0, 0, 0, 0], [0, 1, 2, 0], [0, 3, 4, 0], [0, 0, 0, 0],
+            ],
+            [
+                [0, 0, 0, 0], [0, 5, 6, 0], [0, 7, 8, 0], [0, 0, 0, 0]
+            ]
+        ])
 
         result = np.allclose(actual, expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))

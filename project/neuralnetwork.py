@@ -588,10 +588,54 @@ class NeuralNetwork():
             https://hideyukiinada.github.io/cnn_backprop_strides2.html
             """
 
+            # Calculate ∂L/∂a_prev
+            # Step 1. Interweave ∂L/∂z with zeros
             # Determine the number of output channels
-            output_channels = cumulative_derivative_to_z[3]
-            for c in range(output_channels):
-                pass # marker
+            channels = cumulative_derivative_to_z.shape[3]
+            dataset_size = cumulative_derivative_to_z.shape[0]
+            h = cumulative_derivative_to_z.shape[1]
+            w = cumulative_derivative_to_z.shape[2]
+            strides = this_layer.strides[0]  # FIXME for non-square matrix
+            if strides > 1:
+                l1 = list()
+                for i in range(dataset_size):
+                    l2 = list()
+                    for c in range(channels): # shape = (dataset_size, h, w)
+                        padded = conv.zero_interweave(cumulative_derivative_to_z[i,:,:,c], strides-1)
+                        l2.append(padded)
+
+                    l2np = np.array(l2)
+                    l2combined = np.concatenate((l2np))
+                    l2stacked= l2combined.reshape((h * 2, w * 2, channels))
+                    l1.append(l2stacked)
+
+                l1np = np.array(l1)
+                l1combined = np.concatenate((l1np))
+                partial_l_partial_z_interweaved = l1combined.reshape((dataset_size, h * 2, w * 2, channels))
+
+            else: # if strides == 1
+                partial_l_partial_z_interweaved = cumulative_derivative_to_z
+
+            # Step 2.  Zeropad
+            h = partial_l_partial_z_interweaved.shape[1]
+            w = partial_l_partial_z_interweaved.shape[2]
+            h2 = h + (this_layer.kernel_shape[0] //2)*2
+            w2 = w + (this_layer.kernel_shape[1] //2)*2
+            l1 = list()
+            for i in range(dataset_size):
+                l2 = list()
+                for c in range(channels):
+                    padded = conv.pad_matrix_uniform(partial_l_partial_z_interweaved[i, :, :, c], this_layer.kernel_shape[0] //2) # FIXME for non-square matrix
+                    l2.append(padded)
+
+                l2np = np.array(l2)
+                l2combined = np.concatenate((l2np))
+                l2stacked = l2combined.reshape((h2, w2, channels))
+                l1.append(l2stacked)
+
+            l1np = np.array(l1)
+            l1combined = np.concatenate((l1np))
+            partial_l_partial_z_padded = l1combined.reshape((dataset_size, h2, w2, channels))
 
         return cumulative_derivative_to_a_prev  # Shape is the same as the previous layer's activation.
 
