@@ -554,3 +554,117 @@ class Convolve():
         combined_shape = combined_shape + list(out_shape)
 
         return target_tensor.reshape(combined_shape)
+
+    @staticmethod
+    def convolve_tensor_multi_channel_back(input_data_tensor, kernel_tensor, strides=(1, 1), use_padding=True):
+        """
+        Convolve stacked 2D matrices with the stacked 2D kernels.
+        Sizes of volume from matrix and kernel need to match.
+        Convolve in the reverse channel direction.  This is to be used for backprop.
+
+        Parameters
+        ----------
+        input_data_tensor: ndarray
+            Stacked 2D Matrix of shape (row count, col count, input channels)
+        kernel_tensor: ndarray
+            Stacked 2D convolution kernel of shape (row count, col count, input channels, output channels)
+        strides: tuple
+            Step size in each axis
+        padding: bool
+            True if m should be zero-padded before convolution.  This is to keep the output matrix the same size.
+            False if no padding should be applied before convolution.
+
+        Returns
+        -------
+        target_tensor: ndarray
+            Tensor.
+
+        Raises
+        ------
+        ValueError
+            If kernel size is greater than m in any axis after padding, or if the size of volume do not match between
+            the matrix and the kernel.
+
+        """
+        kernel_input_channel_num = kernel_tensor.shape[2]
+        strides = strides
+        use_padding = use_padding
+
+        target_tensor = None
+        out_shape = None
+
+        output = list()
+        for i in range(kernel_input_channel_num):
+            unbiased_out = Convolve.convolve_tensor(input_data_tensor, kernel_tensor[:, :, i, :], strides=strides,
+                                                    use_padding=use_padding)
+
+            out_2d = unbiased_out
+
+            out_shape = out_2d.shape
+            h = out_shape[0]
+            w = out_shape[1]
+
+            out_2d = out_2d.reshape(h, w, 1)
+            output.append(out_2d)
+
+        target_tensor = np.concatenate(output, axis=2)
+
+        combined_shape = list()
+        combined_shape = combined_shape + list(out_shape)
+        combined_shape.append(kernel_input_channel_num)
+
+        return target_tensor.reshape(combined_shape)
+
+
+    @staticmethod
+    def convolve_tensor_dataset_back(input_data_tensor, kernel_tensor, strides=(1, 1), use_padding=True):
+        """
+        Convolve the dataset with the 2D conv kernels.
+
+        Parameters
+        ----------
+        input_data_tensor: ndarray
+            Training sample (ow count, col count, input channels)
+        kernel_tensor: ndarray
+            Stacked 2D convolution kernel of shape (row count, col count, input channels, output channels)
+        strides: tuple
+            Step size in each axis
+        padding: bool
+            True if m should be zero-padded before convolution.  This is to keep the output matrix the same size.
+            False if no padding should be applied before convolution.
+
+        Convolve in the reverse channel direction.  This is to be used for backprop.
+
+        Returns
+        -------
+        target_tensor: ndarray
+            Tensor.
+
+        Raises
+        ------
+        ValueError
+            If kernel size is greater than m in any axis after padding, or if the size of volume do not match between
+            the matrix and the kernel.
+
+        """
+        sample_size = input_data_tensor.shape[0]
+        strides = strides
+        use_padding = use_padding
+
+        target_tensor = None
+        out_shape = None
+
+        output = list()
+        for i in range(sample_size):
+            out_2d = Convolve.convolve_tensor_multi_channel_back(input_data_tensor[i], kernel_tensor, strides=strides,
+                                                            use_padding=use_padding)
+            out_shape = out_2d.shape
+            output.append(out_2d)
+
+            target_tensor = np.concatenate(output)
+
+        combined_shape = list()
+        combined_shape.append(sample_size)
+        combined_shape = combined_shape + list(out_shape)
+
+        return target_tensor.reshape(combined_shape)

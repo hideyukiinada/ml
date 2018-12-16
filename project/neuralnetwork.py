@@ -582,7 +582,7 @@ class NeuralNetwork():
             pz_pa_prev = self.partial_z_wrt_partial_a_prev(layer_index)
 
             cumulative_derivative_to_a_prev = cumulative_derivative_to_z.dot(pz_pa_prev.T)
-        else: # if Conv
+        else:  # if Conv
             """
             See refer to my documentation to see how these calculations are derived: 
             https://hideyukiinada.github.io/cnn_backprop_strides2.html
@@ -600,32 +600,33 @@ class NeuralNetwork():
                 l1 = list()
                 for i in range(dataset_size):
                     l2 = list()
-                    for c in range(channels): # shape = (dataset_size, h, w)
-                        padded = conv.zero_interweave(cumulative_derivative_to_z[i,:,:,c], strides-1)
+                    for c in range(channels):  # shape = (dataset_size, h, w)
+                        padded = conv.zero_interweave(cumulative_derivative_to_z[i, :, :, c], strides - 1)
                         l2.append(padded)
 
                     l2np = np.array(l2)
                     l2combined = np.concatenate((l2np))
-                    l2stacked= l2combined.reshape((h * 2, w * 2, channels))
+                    l2stacked = l2combined.reshape((h * 2, w * 2, channels))
                     l1.append(l2stacked)
 
                 l1np = np.array(l1)
                 l1combined = np.concatenate((l1np))
                 partial_l_partial_z_interweaved = l1combined.reshape((dataset_size, h * 2, w * 2, channels))
 
-            else: # if strides == 1
+            else:  # if strides == 1
                 partial_l_partial_z_interweaved = cumulative_derivative_to_z
 
             # Step 2.  Zeropad
-            h = partial_l_partial_z_interweaved.shape[1]
-            w = partial_l_partial_z_interweaved.shape[2]
-            h2 = h + (this_layer.kernel_shape[0] //2)*2
-            w2 = w + (this_layer.kernel_shape[1] //2)*2
+            h = partial_l_partial_z_interweaved.shape[1]  # e.g. 32
+            w = partial_l_partial_z_interweaved.shape[2]  # e.g. 32
+            h2 = h + (this_layer.kernel_shape[0] // 2) * 2  # e.g. 34
+            w2 = w + (this_layer.kernel_shape[1] // 2) * 2  # e.g. 34
             l1 = list()
             for i in range(dataset_size):
                 l2 = list()
                 for c in range(channels):
-                    padded = conv.pad_matrix_uniform(partial_l_partial_z_interweaved[i, :, :, c], this_layer.kernel_shape[0] //2) # FIXME for non-square matrix
+                    padded = conv.pad_matrix_uniform(partial_l_partial_z_interweaved[i, :, :, c],
+                                                     this_layer.kernel_shape[0] // 2)  # FIXME for non-square matrix
                     l2.append(padded)
 
                 l2np = np.array(l2)
@@ -635,7 +636,29 @@ class NeuralNetwork():
 
             l1np = np.array(l1)
             l1combined = np.concatenate((l1np))
-            partial_l_partial_z_padded = l1combined.reshape((dataset_size, h2, w2, channels))
+            partial_l_partial_z_padded = l1combined.reshape((dataset_size, h2, w2, channels))  # e.g. 128, 34, 34, 8
+
+            # Step 3. Flip W vertically and horizontally
+            weights = self.weight[layer_index]
+
+            h = weights.shape[0]
+            w = weights.shape[1]
+            prev_channels = weights.shape[2]
+            channels = weights.shape[3]
+
+            weights_flipped = np.zeros((h, w, prev_channels, channels))
+
+            for c in range(channels):
+                for prev_c in range(prev_channels):
+                    m = weights[:,:,prev_c,c]
+                    m2 = np.flip(m, 0)
+                    weights_flipped[:, :, prev_c, c] = np.flip(m2, 1)
+
+            # Convolute partial_l_partial_z_padded * weights_flipped
+            cumulative_derivative_to_a_prev = conv.convolve_tensor_dataset_back(partial_l_partial_z_padded, weights_flipped, use_padding=False)
+
+            print("***")
+
 
         return cumulative_derivative_to_a_prev  # Shape is the same as the previous layer's activation.
 
