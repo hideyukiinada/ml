@@ -50,6 +50,7 @@ from .convolve import _calculate_target_matrix_dimension
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
 
+
 @jit(nopython=True)
 def forward_prop_affine_transform(a_prev, weight, bias):
     """
@@ -72,6 +73,7 @@ def forward_prop_affine_transform(a_prev, weight, bias):
 
     return a_prev.dot(weight) + bias
 
+
 class LayerType():
     """
     Type of layers for neural network
@@ -79,18 +81,21 @@ class LayerType():
     DENSE = 0
     CONV = 1
 
+
 class Layer():
     """
     Holds meta-information of a single layer of neural network
     """
 
     def __init__(self, num_units, activation=af.RELU):
-        self.num_units = num_units # number of units on the layer.
-        self.activation = activation # the activation function for the layer.
-        self.layer_type = LayerType.DENSE #type of the layer
+        self.num_units = num_units  # number of units on the layer.
+        self.activation = activation  # the activation function for the layer.
+        self.layer_type = LayerType.DENSE  # type of the layer
+
 
 class ConvLayer(Layer):
-    def __init__(self, kernel_shape, channels, strides=(1, 1), use_padding=True, activation=af.RELU, flatten=False, layer_dim=None):
+    def __init__(self, kernel_shape, channels, strides=(1, 1), use_padding=True, activation=af.RELU, flatten=False,
+                 layer_dim=None):
         """
         Initialize kernel parameters.
 
@@ -118,6 +123,7 @@ class ConvLayer(Layer):
         self.flatten = flatten
         self.layer_dim = layer_dim
 
+
 class Model():
     """
     Container for holding information for multiple layers
@@ -139,7 +145,8 @@ class Model():
         self.layers = list()
 
         if layer_dim is not None:
-            self.layers.append(ConvLayer(layer_dim=layer_dim, kernel_shape=None, channels=layer_dim[2], activation=af.NONE))
+            self.layers.append(
+                ConvLayer(layer_dim=layer_dim, kernel_shape=None, channels=layer_dim[2], activation=af.NONE))
         else:
             self.layers.append(Layer(num_units=num_input, activation=af.NONE))
 
@@ -255,10 +262,10 @@ class NeuralNetwork():
                         w = np.zeros((num_units_prev_layer, num_units_this_layer))
                     elif self.weight_parameter.init_type == wparam.LAYER_UNIT_COUNT_PROPORTIONAL:
                         w = np.random.randn(num_units_prev_layer, num_units_this_layer) * math.sqrt(
-                        1.0 / num_units_prev_layer) * self.weight_parameter.multiplier
+                            1.0 / num_units_prev_layer) * self.weight_parameter.multiplier
                     elif self.weight_parameter.init_type == wparam.LAYER_UNIT_COUNT_PROPORTIONAL2:
                         w = np.random.randn(num_units_prev_layer, num_units_this_layer) * math.sqrt(
-                        2.0 / num_units_prev_layer) * self.weight_parameter.multiplier
+                            2.0 / num_units_prev_layer) * self.weight_parameter.multiplier
 
                 # Bias
                 if self.bias_parameter is None:
@@ -273,23 +280,23 @@ class NeuralNetwork():
                     elif self.bias_parameter.init_type == wparam.ZERO:
                         b = np.zeros((1, num_units_this_layer))
 
-            else: # if current layer is conv
+            else:  # if current layer is conv
                 if prev_layer.layer_dim is None:
                     log.error("Fatal error.  Dimension of the previous layer is set to None.")
-                    sys.exit(1)
+                    raise ValueError("Fatal error.  Dimension of the previous layer is set to None.")
 
                 prev_channels = prev_layer.channels
                 prev_layer_height = prev_layer.layer_dim[0]
                 prev_layer_width = prev_layer.layer_dim[1]
 
-                kernel_shape = this_layer.kernel_shape # 0:height, 1:width
+                kernel_shape = this_layer.kernel_shape  # 0:height, 1:width
                 channels = this_layer.channels
                 strides = this_layer.strides
                 use_padding = this_layer.use_padding
                 kernel_height = kernel_shape[0]
                 kernel_width = kernel_shape[1]
-                padding_height = (kernel_shape[0] // 2)*2
-                padding_width = (kernel_shape[1] // 2)*2
+                padding_height = (kernel_shape[0] // 2) * 2
+                padding_width = (kernel_shape[1] // 2) * 2
 
                 target_height = (prev_layer_height + padding_height - kernel_height) // strides[0] + 1
                 target_width = (prev_layer_width + padding_width - kernel_width) // strides[1] + 1
@@ -298,7 +305,7 @@ class NeuralNetwork():
                 this_layer.num_units = target_height * target_width * channels
 
                 # FIXME - Support weight parameters
-                w = np.random.randn(kernel_shape[0], kernel_shape[1], prev_channels, channels)*0.1
+                w = np.random.randn(kernel_shape[0], kernel_shape[1], prev_channels, channels) * 0.1
                 b = np.zeros((channels))
 
             self.weight.append(w)
@@ -416,13 +423,9 @@ class NeuralNetwork():
             use_padding = this_layer.use_padding
             z = conv.convolve_tensor_dataset(a_prev, kernel, bias, strides=strides, use_padding=use_padding)
 
-            if this_layer.flatten == True:
-                z_shape = z.shape
-                z = z.reshape((z_shape[0],z_shape[1]*z_shape[2]*z_shape[3]))
-
-        else: # Dense layer
+        else:  # Dense layer
             # Affine transformation
-            #z = a_prev.dot(self.weight[current_layer_index]) + self.bias[current_layer_index]
+            # z = a_prev.dot(self.weight[current_layer_index]) + self.bias[current_layer_index]
             z = forward_prop_affine_transform(a_prev, self.weight[current_layer_index], self.bias[current_layer_index])
 
         self.z[current_layer_index] = z
@@ -436,6 +439,10 @@ class NeuralNetwork():
             a = af.leaky_relu(z)
         else:
             a = af.none(z)
+
+        if this_layer.layer_type == LayerType.CONV and this_layer.flatten == True:
+            a_shape = a.shape
+            a = a.reshape((a_shape[0], a_shape[1] * a_shape[2] * a_shape[3]))
 
         self.a[current_layer_index] = a
 
@@ -520,12 +527,33 @@ class NeuralNetwork():
             Updated accumulated derivative from the last layer
 
         """
+
+        log.debug("Backprop: Layer index: %d" % (layer_index))
+
+        if layer_index <= self.num_layers - 1:  # for a 3 layer network, if index <= 2
+            above_layer = self.model.layers[layer_index + 1]
+        else:
+            above_layer = None
+
+        this_layer = self.model.layers[layer_index]
+
+        if this_layer.layer_type == LayerType.CONV:
+            if above_layer is None:
+                raise ValueError("Unexpected value for above layer.  Value is None.")
+
+            if above_layer.layer_type == LayerType.DENSE:
+                derivative_cumulative = derivative_cumulative.reshape(
+                    (derivative_cumulative.shape[0], this_layer.layer_dim[0],
+                     this_layer.layer_dim[1],
+                     this_layer.layer_dim[2]
+                     ))
+
         # Derivative of a with respect to z
-        if self.model.layers[layer_index].activation == af.SIGMOID:
+        if this_layer.activation == af.SIGMOID:
             pa_pz = self.sigmoid_derivative_with_z(layer_index)
-        elif self.model.layers[layer_index].activation == af.RELU:
+        elif this_layer.activation == af.RELU:
             pa_pz = self.relu_derivative_with_z(layer_index)
-        elif self.model.layers[layer_index].activation == af.LEAKY_RELU:
+        elif this_layer.activation == af.LEAKY_RELU:
             pa_pz = self.leaky_relu_derivative_with_z(layer_index)
         else:
             pa_pz = self.none_derivative_with_z(layer_index)
@@ -534,24 +562,37 @@ class NeuralNetwork():
         # Note that the shape is still the same as current layer.
 
         # Derivative of z with respect to weight
-        pz_pw = self.partial_z_wrt_partial_w(layer_index)
-        cumulative_derivative_to_w = pz_pw.T.dot(cumulative_derivative_to_z)
-        # At this point, shape of cumulative_derivative_to_w is the same as the weight of this layer
-        cumulative_derivative_to_w /= self.dataset_size
-        self.gradient_weight[layer_index] = cumulative_derivative_to_w
+        if this_layer.layer_type == LayerType.DENSE:
+            pz_pw = self.partial_z_wrt_partial_w(layer_index)
+            cumulative_derivative_to_w = pz_pw.T.dot(cumulative_derivative_to_z)
 
-        # Derivative of z with respect to bias
-        pz_pb = self.partial_z_wrt_partial_b(layer_index)
-        cumulative_derivative_to_b = np.sum(cumulative_derivative_to_z * pz_pb, axis=0)
-        # At this point, shape of cumulative_derivative_to_b is the same as the bias of this layer
+            # At this point, shape of cumulative_derivative_to_w is the same as the weight of this layer
+            cumulative_derivative_to_w /= self.dataset_size
+            self.gradient_weight[layer_index] = cumulative_derivative_to_w
 
-        cumulative_derivative_to_b /= self.dataset_size
-        self.gradient_bias[layer_index] = cumulative_derivative_to_b
+            # Derivative of z with respect to bias
+            pz_pb = self.partial_z_wrt_partial_b(layer_index)
+            cumulative_derivative_to_b = np.sum(cumulative_derivative_to_z * pz_pb, axis=0)
+            # At this point, shape of cumulative_derivative_to_b is the same as the bias of this layer
 
-        # Derivative of z with respect to previous layer's activation
-        pz_pa_prev = self.partial_z_wrt_partial_a_prev(layer_index)
+            cumulative_derivative_to_b /= self.dataset_size
+            self.gradient_bias[layer_index] = cumulative_derivative_to_b
 
-        cumulative_derivative_to_a_prev = cumulative_derivative_to_z.dot(pz_pa_prev.T)
+            # Derivative of z with respect to previous layer's activation
+            pz_pa_prev = self.partial_z_wrt_partial_a_prev(layer_index)
+
+            cumulative_derivative_to_a_prev = cumulative_derivative_to_z.dot(pz_pa_prev.T)
+        else: # if Conv
+            """
+            See refer to my documentation to see how these calculations are derived: 
+            https://hideyukiinada.github.io/cnn_backprop_strides2.html
+            """
+
+            # Determine the number of output channels
+            output_channels = cumulative_derivative_to_z[3]
+            for c in range(output_channels):
+                pass # marker
+
         return cumulative_derivative_to_a_prev  # Shape is the same as the previous layer's activation.
 
     def _update_weight(self):
