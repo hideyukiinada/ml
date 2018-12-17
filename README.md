@@ -15,3 +15,7 @@ Have a look at [read me in examples](https://github.com/hideyukiinada/ml/blob/ma
   - Forward propagation
   - Back propagation and gradient descent 
 * Use as a playground to test various technologies in AI (e.g. new optimizer, new cost function, GAN). 
+
+# Upcoming features
+* Convolutional Neural Network
+    (I am in the middle of implementing CNN.  Backprop calculation is documented [here]( https://hideyukiinada.github.io/cnn_backprop_strides2.html).)
