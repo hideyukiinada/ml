@@ -82,23 +82,24 @@ class TestConvolveCube(unittest.TestCase):
         m1 = np.ones((2, 2, 5))
         h_pad = 1
         w_pad = 1
-        m1 = Convolve.pad_cube(m1, (h_pad, w_pad)) # to 4x4x5
+        m1 = Convolve.pad_cube(m1, (h_pad, w_pad))  # to 4x4x5
 
         expected_c1 = np.array([[10, 10], [10, 10]])
         expected_c2 = np.array([[40, 40], [40, 40]])
-        m= np.ones((training_set_size, 4, 4, 5))
+        m = np.ones((training_set_size, 4, 4, 5))
         m[0] = m1
 
         k = np.ones((3, 3, 5, 8))  # 3x3 kernel with 5 channels, 8 output channels
-        k[:,:,:,0] *= 0.5
-        k[:,:,:,2] *= 2
+        k[:, :, :, 0] *= 0.5
+        k[:, :, :, 2] *= 2
         actual = Convolve.convolve_tensor_dataset_2(m, k, use_padding=False)
 
-        actual_c1 = actual[0,:,:,0]
-        actual_c2 = actual[0,:,:,2]
+        actual_c1 = actual[0, :, :, 0]
+        actual_c2 = actual[0, :, :, 2]
 
         result = np.allclose(actual_c1, expected_c1)
-        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual_c1, expected_c1))
+        self.assertTrue(result,
+                        "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual_c1, expected_c1))
 
         result = np.allclose(actual_c2, expected_c2)
         self.assertTrue(result,
@@ -108,8 +109,6 @@ class TestConvolveCube(unittest.TestCase):
         actual = actual.shape
         result = (actual == expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
-
-
 
     def test_convolve_training_set_2(self):
         """
@@ -125,6 +124,68 @@ class TestConvolveCube(unittest.TestCase):
 
         actual = Convolve.convolve_tensor_dataset_2(m, k)
 
+        actual = actual.shape
+        result = (actual == expected)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
+
+    def test_convolve_tensor_8_channel_output_for_3_channel_input_training_set_with_bias(self):
+        """
+        Test convolve layers.
+        """
+        training_set_size = 100
+
+        m = np.ones((training_set_size, 64, 64, 3))  # 3 input channel 64x64 matrix
+
+        k = np.ones((3, 3, 3, 8))  # 3x3 kernel, 3 input, 8 output channels
+        bias = np.zeros((8))
+
+        output = np.zeros((training_set_size, 64, 64, 8))
+        expected = output.shape
+
+        actual = Convolve.convolve_tensor_dataset_2(m, k, bias)
+
+        actual = actual.shape
+        result = (actual == expected)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
+
+    def test_convolve_cube_with_bias(self):
+        """
+        Test with bias
+        """
+        training_set_size = 2
+
+        m1 = np.ones((2, 2, 5))
+        h_pad = 1
+        w_pad = 1
+        m1 = Convolve.pad_cube(m1, (h_pad, w_pad))  # to 4x4x5
+
+        expected_c1 = np.array([[20, 20], [20, 20]])
+        expected_c2 = np.array([[140, 140], [140, 140]])
+        m = np.ones((training_set_size, 4, 4, 5))
+        m[0] = m1
+
+        k = np.ones((3, 3, 5, 8))  # 3x3 kernel with 5 channels, 8 output channels
+        k[:, :, :, 0] *= 0.5
+        k[:, :, :, 2] *= 2
+
+        bias = np.zeros((8))
+        bias[0] = 10
+        bias[2] = 100
+
+        actual = Convolve.convolve_tensor_dataset_2(m, k, bias=bias, use_padding=False)
+
+        actual_c1 = actual[0, :, :, 0]
+        actual_c2 = actual[0, :, :, 2]
+
+        result = np.allclose(actual_c1, expected_c1)
+        self.assertTrue(result,
+                        "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual_c1, expected_c1))
+
+        result = np.allclose(actual_c2, expected_c2)
+        self.assertTrue(result,
+                        "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual_c2, expected_c2))
+
+        expected = np.zeros((training_set_size, 2, 2, 8)).shape
         actual = actual.shape
         result = (actual == expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))

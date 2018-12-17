@@ -421,7 +421,7 @@ class NeuralNetwork():
             bias = self.bias[current_layer_index]
             strides = this_layer.strides
             use_padding = this_layer.use_padding
-            z = conv.convolve_tensor_dataset(a_prev, kernel, bias, strides=strides, use_padding=use_padding)
+            z = conv.convolve_tensor_dataset_2(a_prev, kernel, bias, strides=strides, use_padding=use_padding)
 
         else:  # Dense layer
             # Affine transformation

@@ -178,7 +178,7 @@ class TestConvolve(unittest.TestCase):
 
         expected = np.zeros((training_set_size, 64, 64, 8)).shape
 
-        actual = Convolve.convolve_tensor_dataset(m, k)
+        actual = Convolve.convolve_tensor_dataset_2(m, k)
 
         actual = actual.shape
         result = (actual == expected)
@@ -196,7 +196,8 @@ class TestConvolve(unittest.TestCase):
         expected = output.shape
         num_output_channels = k.shape[3]
 
-        actual = Convolve.convolve_tensor_dataset(m, k)
+        self.dataset = Convolve.convolve_tensor_dataset_2(m, k)
+        actual = self.dataset
 
         actual = actual.shape
         result = (actual == expected)
@@ -240,7 +241,7 @@ class TestConvolve(unittest.TestCase):
         expected = output.shape
         # num_output_channels = k.shape[0]
 
-        actual = Convolve.convolve_tensor_dataset(m, k, bias)
+        actual = Convolve.convolve_tensor_dataset_2(m, k, bias)
 
         actual = actual.shape
         result = (actual == expected)
@@ -257,9 +258,8 @@ class TestConvolve(unittest.TestCase):
         k = np.ones((5, 5, 3, 8))  # 3x3 kernel, 3 input, 8 output channels
         bias = np.zeros((8))
 
-        # output = np.zeros((training_set_size, 64, 64, 8))
         expected = (training_set_size, 32, 32, 8)
-        actual = Convolve.convolve_tensor_dataset(m, k, bias, strides=(2, 2))
+        actual = Convolve.convolve_tensor_dataset_2(m, k, bias, strides=(2, 2))
 
         actual = actual.shape
         result = (actual == expected)
@@ -278,7 +278,7 @@ class TestConvolve(unittest.TestCase):
 
         # output = np.zeros((training_set_size, 64, 64, 8))
         expected = (training_set_size, 30, 30, 8)
-        actual = Convolve.convolve_tensor_dataset(m, k, bias, use_padding=False, strides=(2, 2))
+        actual = Convolve.convolve_tensor_dataset_2(m, k, bias, use_padding=False, strides=(2, 2))
 
         actual = actual.shape
         result = (actual == expected)
