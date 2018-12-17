@@ -688,10 +688,16 @@ class NeuralNetwork():
             a_prev_padded = l1combined.reshape((dataset_size, h2, w2, channels))  # e.g. 128, 34, 34, 8
 
             # Step 3. Convolve two matrices
-            cumulative_derivative_to_w = conv.convolve_two_datasets(a_prev_padded,
-                                                                    partial_l_partial_z_interweaved,
-                                                                    use_padding=False)
+            cumulative_derivative_to_w = conv.convolve_two_datasets_calc_mean(a_prev_padded,
+                                                                              partial_l_partial_z_interweaved,
+                                                                              use_padding=False)
             self.gradient_weight[layer_index] = cumulative_derivative_to_w
+
+            # Calculate Calculate ∂L/∂bias
+            pz_pb = 1.0
+            cumulative_derivative_to_b = np.sum(cumulative_derivative_to_z * pz_pb)
+            cumulative_derivative_to_b /= self.dataset_size
+            self.gradient_bias[layer_index] = cumulative_derivative_to_b
 
         return cumulative_derivative_to_a_prev  # Shape is the same as the previous layer's activation.
 

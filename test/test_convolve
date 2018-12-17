@@ -332,6 +332,24 @@ class TestConvolve(unittest.TestCase):
         result = (actual == expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
 
+    def test_convolve_two_datasets_and_calc_mean(self):
+        """
+        Test convolve datasets
+        """
+        training_set_size = 9
+
+        a_prev = np.ones((training_set_size, 18, 18, 3))
+        lz = np.ones((training_set_size, 16, 16, 8))
+        expected = (3, 3, 3, 8)
+
+        actual = Convolve.convolve_two_datasets_calc_mean(a_prev, lz, use_padding=False)
+
+        actual = actual.shape
+        result = (actual == expected)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
+
+
+
 def main():
     """Invoke test function"""
 

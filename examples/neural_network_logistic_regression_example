@@ -64,6 +64,7 @@ def example():
     print(y_hat)
     print("Time elapsed: %.3f seconds" % (end_time - start_time))
 
+
 def main():
     """Defines an application's main functionality"""
     example()

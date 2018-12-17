@@ -719,20 +719,19 @@ class Convolve():
             for j in range(input_channels_1):
                 output_k = list()
                 for k in range(input_channels_2):
-
-                    input_1 = input_data_tensor[i,:,:,j]
-                    input_2 = kernel_data_tensor[i,:,:,k]
+                    input_1 = input_data_tensor[i, :, :, j]
+                    input_2 = kernel_data_tensor[i, :, :, k]
 
                     out_2d = Convolve.convolve2d(input_1, input_2, strides=strides,
-                                                                         use_padding=use_padding)
+                                                 use_padding=use_padding)
                     out_shape = out_2d.shape
-                    out_shape2 = list(out_shape) # add 2 more axes
+                    out_shape2 = list(out_shape)  # add 2 more axes
                     out_shape3 = out_shape2 + [1, 1]
                     out_2d = out_2d.reshape(out_shape3)
 
                     output_k.append(out_2d)
 
-                output_tmp = np.concatenate(output_k, axis=3) # should be (h, w, 1, input_channel_2)
+                output_tmp = np.concatenate(output_k, axis=3)  # should be (h, w, 1, input_channel_2)
                 output_j.append(output_tmp)
 
             output_tmp = np.concatenate(output_j, axis=2)  # should be (h, w, input_channel_1, input_channel_2)
@@ -743,7 +742,49 @@ class Convolve():
 
         final_shape = list()
         final_shape.append(sample_size)
-        final_shape +=  sample_shape
+        final_shape += sample_shape
         output = output.reshape(final_shape)
 
         return output
+
+    @staticmethod
+    def convolve_two_datasets_calc_mean(input_data_tensor, kernel_data_tensor, strides=(1, 1), use_padding=True):
+        """
+        Convolve two datasets with second data acting a kernel and calculate the mean.
+        This is to be used for backprop to calculate the gradient of a kernel.
+
+        Parameters
+        ----------
+        input_data_tensor: ndarray
+            Input data (e.g. previous layer's activation).
+            It has the shape (dataset size, row count, col count, input channels)
+        kernel_data_tensor: ndarray
+            Second input data (e.g. partial derivative of loss to this layer's Z).
+            It has the shape (dataset size, row count, col count, input channels)
+        strides: tuple
+            Step size in each axis
+        padding: bool
+            True if m should be zero-padded before convolution.  This is to keep the output matrix the same size.
+            False if no padding should be applied before convolution.
+
+        Returns
+        -------
+        target_tensor: ndarray
+            Tensor.
+
+        Raises
+        ------
+        ValueError
+            If kernel size is greater than m in any axis after padding, or if the size of volume do not match between
+            the matrix and the kernel.
+
+        """
+        k = Convolve.convolve_two_datasets(input_data_tensor, kernel_data_tensor, strides, use_padding)
+        dataset_size = input_data_tensor.shape[0]
+
+        k_sum = k.sum(axis=0)
+        k_mean = k_sum / dataset_size
+
+        k = k_mean.reshape((k.shape[1], k.shape[2], k.shape[3], k.shape[4]))  # h, w, prev_channels, channels
+
+        return k
