@@ -54,10 +54,10 @@ def example():
 
     model = Model(layer_dim=(28, 28, 1))
     model.add(
-        ConvLayer(kernel_shape=(3, 3), strides=(2, 2), channels=8, use_padding=True, activation=af.RELU))  # to 14x14
-    model.add(ConvLayer(kernel_shape=(3, 3), strides=(2, 2), channels=16, use_padding=True, activation=af.RELU,
+        ConvLayer(kernel_shape=(3, 3), strides=(2, 2), channels=32, use_padding=True, activation=af.RELU))  # to 14x14
+    model.add(ConvLayer(kernel_shape=(3, 3), strides=(2, 2), channels=64, use_padding=True, activation=af.RELU,
                         flatten=True))  # to 7x7
-    model.add(Layer(512, activation=af.RELU))
+    model.add(Layer(128, activation=af.RELU))
     model.add(Layer(10, activation=af.SIGMOID))
 
     nn = NeuralNetwork(model, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY,
