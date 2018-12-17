@@ -38,7 +38,7 @@ def _convolve2d_jit(m, kernel, strides, target_height, target_width):
 
     return m_out
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def _convolve_cube_jit(m, kernel, strides):
     row_stride = strides[0]
     col_stride = strides[1]
@@ -53,8 +53,12 @@ def _convolve_cube_jit(m, kernel, strides):
     # Convolve
     for i in range(target_height):
         for j in range(target_width):
-            m_out[i, j] = (m[i * row_stride:i * row_stride + kernel_height,
-                           j * col_stride:j * col_stride + kernel_width] * kernel).sum()
+            a = m[i * row_stride:i * row_stride + kernel_height,
+                           j * col_stride:j * col_stride + kernel_width]
+            b = kernel
+            c = a * b
+            d = c.sum()
+            m_out[i, j] = d
 
     return m_out
 
@@ -296,7 +300,7 @@ class Convolve():
         out: ndarray
             3d tensor padded with 0 along the edges.
         """
-        return _pad_cube(m, padding[0], padding[1])
+        return _pad_cube(m, int(padding[0]), int(padding[1]))
 
     @staticmethod
     def zero_interweave(m, pad_count):
@@ -934,8 +938,12 @@ class Convolve():
         if input_channels != input_channels2:
             raise ValueError("Input data channels do not match kernel channels")
 
-        padding_h = (kernel_height // 2) * 2
-        padding_w = (kernel_width // 2) * 2
+        if use_padding:
+            padding_h = (kernel_height // 2) * 2
+            padding_w = (kernel_width // 2) * 2
+        else:
+            padding_h = 0
+            padding_w = 0
 
         output_height = (data_height - kernel_height + padding_h) // strides[0] + 1
         output_width = (data_width - kernel_width + padding_w) // strides[1] + 1
@@ -943,13 +951,13 @@ class Convolve():
         output = np.zeros((sample_size, output_height, output_width, output_channels))
 
         for i in range(sample_size):
-            for j in range(data_height):
-                for k in range(data_width):
-                    for l in range(output_channels):
-                        input_t = input_data_tensor[i,:,:,:]
+            for j in range(output_channels):
+                input_t = input_data_tensor[i,:,:,:]
 
-                        if use_padding:
-                            input_t = Convolve.pad_cube(input_t, (padding_h/2, padding_w/2)) # FIXME for non-square input
+                if use_padding:
+                    input_t = Convolve.pad_cube(input_t, (padding_h/2, padding_w/2))
 
-                        kernel_t = kernel_tensor[:,:,:,l]
-                        output[i,j,k,l] = Convolve.convolve_cube(input_t, kernel_t, strides)
+                kernel_t = kernel_tensor[:,:,:,j]
+                output[i,:,:,j] = Convolve.convolve_cube(input_t, kernel_t, strides)
+
+        return output
