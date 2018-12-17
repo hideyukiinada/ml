@@ -305,7 +305,9 @@ class NeuralNetwork():
                 this_layer.num_units = target_height * target_width * channels
 
                 # FIXME - Support weight parameters
-                w = np.random.randn(kernel_shape[0], kernel_shape[1], prev_channels, channels) * 0.1
+#                w = np.random.randn(kernel_shape[0], kernel_shape[1], prev_channels, channels) * 0.1
+                w = np.random.randn(kernel_shape[0], kernel_shape[1], prev_channels, channels) * 0.01
+
                 b = np.zeros((channels))
 
             self.weight.append(w)
