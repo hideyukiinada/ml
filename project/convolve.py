@@ -197,10 +197,10 @@ def _pad_cube(m, h_pad, w_pad):
     m: ndarray
         3d tensor to be padded.
     h_pad: int
-        Number of padding in axis 0 on the top edge and bottom edge.
+        The number of padding in axis 0 on the top edge and bottom edge.
         Total number of padding for axis 0 is h_pad * 2.
     w_pad: int
-        Number of padding in axis 0 on the left edge and right edge.
+        The number of padding in axis 0 on the left edge and right edge.
         Total number of padding for axis 1 is w_pad * 2.
 
     Returns
@@ -279,7 +279,7 @@ def _zero_interweave(m, pad_count):
 class Convolve():
 
     @staticmethod
-    def pad_cube(m, h_pad, w_pad):
+    def pad_cube(m, padding):
         """
         Zero-pad a numpy array that has the shape of (h, w, channels) in h and w.
 
@@ -287,19 +287,16 @@ class Convolve():
         ----------
         m: ndarray
             3d tensor to be padded.
-        h_pad: int
-            Number of padding in axis 0 on the top edge and bottom edge.
-            Total number of padding for axis 0 is h_pad * 2.
-        w_pad: int
-            Number of padding in axis 0 on the left edge and right edge.
-            Total number of padding for axis 1 is w_pad * 2.
+        padding: tuple
+            Number of padding in (row, height) on one side.
+            If you put 2 padding on the left and 2 padding on the right, specify 2.
 
         Returns
         -------
         out: ndarray
             3d tensor padded with 0 along the edges.
         """
-        return _pad_cube(m, h_pad, w_pad)
+        return _pad_cube(m, padding[0], padding[1])
 
     @staticmethod
     def zero_interweave(m, pad_count):
@@ -924,14 +921,15 @@ class Convolve():
         strides = strides
         use_padding = use_padding
 
+
         data_height = input_data_tensor.shape[1]
         data_width = input_data_tensor.shape[2]
         input_channels = input_data_tensor.shape[3]
 
-        kernel_height = kernel_tensor[0]
-        kernel_width = kernel_tensor[1]
-        input_channels2 = kernel_tensor[2]
-        output_channels = kernel_tensor[3]
+        kernel_height = kernel_tensor.shape[0]
+        kernel_width = kernel_tensor.shape[1]
+        input_channels2 = kernel_tensor.shape[2]
+        output_channels = kernel_tensor.shape[3]
 
         if input_channels != input_channels2:
             raise ValueError("Input data channels do not match kernel channels")
@@ -948,8 +946,10 @@ class Convolve():
             for j in range(data_height):
                 for k in range(data_width):
                     for l in range(output_channels):
-                        input_t = input_data_tensor[i,:,:,:,l]
+                        input_t = input_data_tensor[i,:,:,:]
 
                         if use_padding:
-                            kernel_t = kernel_tensor[:,:,:,l]
-                            output[i,j,k,l] = Convolve.convolve_cube(input_t, kernel_t, strides)
+                            input_t = Convolve.pad_cube(input_t, (padding_h/2, padding_w/2)) # FIXME for non-square input
+
+                        kernel_t = kernel_tensor[:,:,:,l]
+                        output[i,j,k,l] = Convolve.convolve_cube(input_t, kernel_t, strides)

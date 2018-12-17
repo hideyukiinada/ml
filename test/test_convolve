@@ -26,7 +26,7 @@ class TestConvolve(unittest.TestCase):
         m = np.ones((2, 2, 5))
         h_pad = 1
         w_pad = 1
-        m = Convolve.pad_cube(m, h_pad, w_pad)
+        m = Convolve.pad_cube(m, (h_pad, w_pad))
 
         k = np.ones((3, 3, 5))
         k *= 0.5
@@ -65,7 +65,7 @@ class TestConvolve(unittest.TestCase):
         h_pad = 1
         w_pad = 1
 
-        m = Convolve.pad_cube(m, h_pad, w_pad)
+        m = Convolve.pad_cube(m, (h_pad, w_pad))
         out = Convolve.convolve_cube(m, k)
 
         actual = out.shape
@@ -400,9 +400,6 @@ class TestConvolve(unittest.TestCase):
         actual = actual.shape
         result = (actual == expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
-
-
-
 def main():
     """Invoke test function"""
 
