@@ -38,6 +38,25 @@ def _convolve2d_jit(m, kernel, strides, target_height, target_width):
 
     return m_out
 
+@jit(nopython=True)
+def _convolve_cube_jit(m, kernel, strides):
+    row_stride = strides[0]
+    col_stride = strides[1]
+    kernel_height = kernel.shape[0]
+    kernel_width = kernel.shape[1]
+
+    target_height = (m.shape[0] - kernel_height) // row_stride + 1
+    target_width = (m.shape[1] - kernel_width) // col_stride + 1
+
+    m_out = np.zeros((target_height, target_width))
+
+    # Convolve
+    for i in range(target_height):
+        for j in range(target_width):
+            m_out[i, j] = (m[i * row_stride:i * row_stride + kernel_height,
+                           j * col_stride:j * col_stride + kernel_width] * kernel).sum()
+
+    return m_out
 
 @jit(nopython=True)
 def _calculate_target_matrix_dimension(m, kernel, paddings, strides):
@@ -168,6 +187,35 @@ def _pad_matrix_uniform(m, pad_count):
                       'constant', constant_values=((0, 0), (0, 0)))
 
 
+@jit(nopython=True)
+def _pad_cube(m, h_pad, w_pad):
+    """
+    Zero-pad a numpy array that has the shape of (h, w, channels) in h and w.
+
+    Parameters
+    ----------
+    m: ndarray
+        3d tensor to be padded.
+    h_pad: int
+        Number of padding in axis 0 on the top edge and bottom edge.
+        Total number of padding for axis 0 is h_pad * 2.
+    w_pad: int
+        Number of padding in axis 0 on the left edge and right edge.
+        Total number of padding for axis 1 is w_pad * 2.
+
+    Returns
+    -------
+    out: ndarray
+        3d tensor padded with 0 along the edges.
+    """
+
+    padded_tensor = np.zeros((m.shape[0] + h_pad * 2, m.shape[1] + w_pad * 2, m.shape[2]))
+
+    padded_tensor[h_pad:-h_pad, w_pad:-w_pad, ] = m
+
+    return padded_tensor
+
+
 def _zero_interweave(m, pad_count):
     """
     Add the same number of padding row and column to m in each axis.
@@ -229,6 +277,29 @@ def _zero_interweave(m, pad_count):
 
 
 class Convolve():
+
+    @staticmethod
+    def pad_cube(m, h_pad, w_pad):
+        """
+        Zero-pad a numpy array that has the shape of (h, w, channels) in h and w.
+
+        Parameters
+        ----------
+        m: ndarray
+            3d tensor to be padded.
+        h_pad: int
+            Number of padding in axis 0 on the top edge and bottom edge.
+            Total number of padding for axis 0 is h_pad * 2.
+        w_pad: int
+            Number of padding in axis 0 on the left edge and right edge.
+            Total number of padding for axis 1 is w_pad * 2.
+
+        Returns
+        -------
+        out: ndarray
+            3d tensor padded with 0 along the edges.
+        """
+        return _pad_cube(m, h_pad, w_pad)
 
     @staticmethod
     def zero_interweave(m, pad_count):
@@ -363,6 +434,33 @@ class Convolve():
             m = _pad_matrix(m, kernel)
 
         return Convolve._convolve2d(m, kernel, strides=strides)
+
+    @staticmethod
+    def convolve_cube(m, kernel, strides=(1, 1)):
+        """
+        Convolve a 3D tensor with a 3D kernel.
+
+        Parameters
+        ----------
+        m: ndarray
+            Matrix
+        k: ndarray
+            Convolution kernel
+        strides: tuple
+            Step size in each axis
+
+        Returns
+        -------
+        out: ndarray
+            2D matrix after the convolution operation with the kernel
+
+        Raises
+        ------
+        ValueError
+            If kernel size is greater than m in any axis after padding
+        """
+
+        return _convolve_cube_jit(m, kernel, strides)
 
     @staticmethod
     def convolve_tensor(input_data_tensor, kernel_tensor, strides=(1, 1), use_padding=True):
@@ -788,3 +886,70 @@ class Convolve():
         k = k_mean.reshape((k.shape[1], k.shape[2], k.shape[3], k.shape[4]))  # h, w, prev_channels, channels
 
         return k
+
+    @staticmethod
+    def convolve_tensor_dataset_2(input_data_tensor, kernel_tensor, bias=None, strides=(1, 1), use_padding=True):
+        """
+        Convolve the dataset with the 2D conv kernels.
+
+        Temporary method name to separately try performance improvement.
+
+        Parameters
+        ----------
+        input_data_tensor: ndarray
+            Training sample (ow count, col count, input channels)
+        kernel_tensor: ndarray
+            Stacked 2D convolution kernel of shape (row count, col count, input channels, output channels)
+        bias: ndarray
+            Bias that is applied to each element after convolution. There is 1 bias for each output channel.
+        strides: tuple
+            Step size in each axis
+        padding: bool
+            True if m should be zero-padded before convolution.  This is to keep the output matrix the same size.
+            False if no padding should be applied before convolution.
+
+        Returns
+        -------
+        target_tensor: ndarray
+            Tensor.
+
+        Raises
+        ------
+        ValueError
+            If kernel size is greater than m in any axis after padding, or if the size of volume do not match between
+            the matrix and the kernel.
+
+        """
+        sample_size = input_data_tensor.shape[0]
+        strides = strides
+        use_padding = use_padding
+
+        data_height = input_data_tensor.shape[1]
+        data_width = input_data_tensor.shape[2]
+        input_channels = input_data_tensor.shape[3]
+
+        kernel_height = kernel_tensor[0]
+        kernel_width = kernel_tensor[1]
+        input_channels2 = kernel_tensor[2]
+        output_channels = kernel_tensor[3]
+
+        if input_channels != input_channels2:
+            raise ValueError("Input data channels do not match kernel channels")
+
+        padding_h = (kernel_height // 2) * 2
+        padding_w = (kernel_width // 2) * 2
+
+        output_height = (data_height - kernel_height + padding_h) // strides[0] + 1
+        output_width = (data_width - kernel_width + padding_w) // strides[1] + 1
+
+        output = np.zeros((sample_size, output_height, output_width, output_channels))
+
+        for i in range(sample_size):
+            for j in range(data_height):
+                for k in range(data_width):
+                    for l in range(output_channels):
+                        input_t = input_data_tensor[i,:,:,:,l]
+
+                        if use_padding:
+                            kernel_t = kernel_tensor[:,:,:,l]
+                            output[i,j,k,l] = Convolve.convolve_cube(input_t, kernel_t, strides)
