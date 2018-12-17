@@ -235,6 +235,8 @@ class NeuralNetwork():
 
         # Allocate weight and bias for each layer
         for i in range(self.num_layers):
+            w = None  # to suppress a wrong IDE warning
+            b = None
 
             this_layer = self.model.layers[i + 1]
             prev_layer = self.model.layers[i]
@@ -304,11 +306,32 @@ class NeuralNetwork():
                 this_layer.layer_dim = (target_height, target_width, channels)
                 this_layer.num_units = target_height * target_width * channels
 
-                # FIXME - Support weight parameters
-#                w = np.random.randn(kernel_shape[0], kernel_shape[1], prev_channels, channels) * 0.1
-                w = np.random.randn(kernel_shape[0], kernel_shape[1], prev_channels, channels) * 0.01
+                if self.weight_parameter is None:
+                    w = np.random.randn(kernel_shape[0], kernel_shape[1], prev_channels, channels) * 0.01
+                else:
+                    if self.weight_parameter.init_type == wparam.NORMAL:
+                        w = np.random.normal(self.weight_parameter.mean, self.weight_parameter.stddev,
+                                             (kernel_shape[0], kernel_shape[1], prev_channels,
+                                              channels)) * self.weight_parameter.multiplier
+                    elif self.weight_parameter.init_type == wparam.UNIFORM:
+                        w = np.random.uniform(self.weight_parameter.mean, self.weight_parameter.stddev,
+                                              (kernel_shape[0], kernel_shape[1], prev_channels,
+                                               channels)) * self.weight_parameter.multiplier
+                    elif self.weight_parameter.init_type == wparam.ZERO:
+                        w = np.zeros((kernel_shape[0], kernel_shape[1], prev_channels, channels))
 
-                b = np.zeros((channels))
+                # Bias
+                if self.bias_parameter is None:
+                    b = np.zeros((channels))
+                else:
+                    if self.bias_parameter.init_type == wparam.NORMAL:
+                        b = np.random.normal(self.bias_parameter.mean, self.bias_parameter.stddev,
+                                             (channels)) * self.bias_parameter.multiplier
+                    elif self.bias_parameter.init_type == wparam.UNIFORM:
+                        b = np.random.uniform(self.bias_parameter.mean, self.bias_parameter.stddev,
+                                              (channels)) * self.bias_parameter.multiplier
+                    elif self.bias_parameter.init_type == wparam.ZERO:
+                        b = np.zeros((channels))
 
             self.weight.append(w)
             self.gradient_weight.append(np.zeros(w.shape))
