@@ -231,7 +231,7 @@ def _pad_cube(m, h_pad, w_pad):
 
     return padded_tensor
 
-
+@jit(nopython=True)
 def _zero_interweave(m, pad_count):
     """
     Add the same number of padding row and column to m in each axis.
@@ -261,10 +261,7 @@ def _zero_interweave(m, pad_count):
     """
 
     # Vertically expand
-    m_shape_plus_1 = list(m.shape)  # (2, 2) to [2, 2]
-    m_shape_plus_1.append(1)  # (2, 2, 1)
-
-    m2 = m.reshape(m_shape_plus_1)
+    m2 = m.reshape((m.shape[0], m.shape[1], 1))
 
     # Create zero matrix to add
     zero_shape = (m2.shape[0], m2.shape[1] * pad_count, m2.shape[2])
@@ -276,10 +273,7 @@ def _zero_interweave(m, pad_count):
 
     # Horizontally expand
     m = m3
-    m_shape_plus_1 = list(m.shape)  # (4, 2) to [4, 2]
-    m_shape_plus_1.append(1)  # (4, 2, 1)
-
-    m2 = m.reshape(m_shape_plus_1)
+    m2 = m.reshape((m.shape[0], m.shape[1], 1))
 
     # Create zero matrix to add
     zero_shape = (m2.shape[0], m2.shape[1], m2.shape[2] * pad_count)
