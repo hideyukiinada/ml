@@ -716,59 +716,59 @@ class Convolve():
 
         return target_tensor.reshape(combined_shape)
 
-    @staticmethod
-    def convolve_tensor_dataset_back(input_data_tensor, kernel_tensor, strides=(1, 1), use_padding=True):
-        """
-        Convolve the dataset with the 2D conv kernels.
-        Convolve in the reverse channel direction.  This is to be used for backprop.
-
-        Parameters
-        ----------
-        input_data_tensor: ndarray
-            Training sample (row count, col count, input channels)
-        kernel_tensor: ndarray
-            Stacked 2D convolution kernel of shape (row count, col count, input channels, output channels)
-        strides: tuple
-            Step size in each axis
-        padding: bool
-            True if m should be zero-padded before convolution.  This is to keep the output matrix the same size.
-            False if no padding should be applied before convolution.
-
-        Returns
-        -------
-        target_tensor: ndarray
-            Tensor.
-
-        Raises
-        ------
-        ValueError
-            If kernel size is greater than m in any axis after padding, or if the size of volume do not match between
-            the matrix and the kernel.
-
-        """
-        sample_size = input_data_tensor.shape[0]
-        strides = strides
-        use_padding = use_padding
-
-        target_tensor = None
-        out_shape = None
-
-        k = kernel_tensor
-
-        output = list()
-        for i in range(sample_size):
-            out_2d = Convolve.convolve_tensor_multi_channel_back(input_data_tensor[i], k, strides=strides,
-                                                                 use_padding=use_padding)
-            out_shape = out_2d.shape
-            output.append(out_2d)
-
-            target_tensor = np.concatenate(output)
-
-        combined_shape = list()
-        combined_shape.append(sample_size)
-        combined_shape = combined_shape + list(out_shape)
-
-        return target_tensor.reshape(combined_shape)
+    # @staticmethod
+    # def convolve_tensor_dataset_back(input_data_tensor, kernel_tensor, strides=(1, 1), use_padding=True):
+    #     """
+    #     Convolve the dataset with the 2D conv kernels.
+    #     Convolve in the reverse channel direction.  This is to be used for backprop.
+    #
+    #     Parameters
+    #     ----------
+    #     input_data_tensor: ndarray
+    #         Training sample (row count, col count, input channels)
+    #     kernel_tensor: ndarray
+    #         Stacked 2D convolution kernel of shape (row count, col count, input channels, output channels)
+    #     strides: tuple
+    #         Step size in each axis
+    #     padding: bool
+    #         True if m should be zero-padded before convolution.  This is to keep the output matrix the same size.
+    #         False if no padding should be applied before convolution.
+    #
+    #     Returns
+    #     -------
+    #     target_tensor: ndarray
+    #         Tensor.
+    #
+    #     Raises
+    #     ------
+    #     ValueError
+    #         If kernel size is greater than m in any axis after padding, or if the size of volume do not match between
+    #         the matrix and the kernel.
+    #
+    #     """
+    #     sample_size = input_data_tensor.shape[0]
+    #     strides = strides
+    #     use_padding = use_padding
+    #
+    #     target_tensor = None
+    #     out_shape = None
+    #
+    #     k = kernel_tensor
+    #
+    #     output = list()
+    #     for i in range(sample_size):
+    #         out_2d = Convolve.convolve_tensor_multi_channel_back(input_data_tensor[i], k, strides=strides,
+    #                                                              use_padding=use_padding)
+    #         out_shape = out_2d.shape
+    #         output.append(out_2d)
+    #
+    #         target_tensor = np.concatenate(output)
+    #
+    #     combined_shape = list()
+    #     combined_shape.append(sample_size)
+    #     combined_shape = combined_shape + list(out_shape)
+    #
+    #     return target_tensor.reshape(combined_shape)
 
     @staticmethod
     def convolve_two_datasets(input_data_tensor, kernel_data_tensor, strides=(1, 1), use_padding=True):
@@ -893,8 +893,6 @@ class Convolve():
         """
         Convolve the dataset with the 2D conv kernels.
 
-        Temporary method name to separately try performance improvement.
-
         Parameters
         ----------
         input_data_tensor: ndarray
@@ -961,5 +959,78 @@ class Convolve():
                 output[i,:,:,j] = Convolve.convolve_cube(input_t, kernel_t, strides)
                 if bias is not None:
                     output[i, :, :, j] += bias[j]
+
+        return output
+
+
+    @staticmethod
+    def convolve_tensor_dataset_back_2(input_data_tensor, kernel_tensor, strides=(1, 1), use_padding=True):
+        """
+        Convolve the dataset with the 2D conv kernels.
+        Convolve in the reverse channel direction.  This is to be used for backprop.
+
+        Parameters
+        ----------
+        input_data_tensor: ndarray
+            Training sample (ow count, col count, input channels)
+        kernel_tensor: ndarray
+            Stacked 2D convolution kernel of shape (row count, col count, input channels, output channels)
+        strides: tuple
+            Step size in each axis
+        padding: bool
+            True if m should be zero-padded before convolution.  This is to keep the output matrix the same size.
+            False if no padding should be applied before convolution.
+
+        Returns
+        -------
+        target_tensor: ndarray
+            Tensor.
+
+        Raises
+        ------
+        ValueError
+            If kernel size is greater than m in any axis after padding, or if the size of volume do not match between
+            the matrix and the kernel.
+
+        """
+        sample_size = input_data_tensor.shape[0]
+        strides = strides
+        use_padding = use_padding
+
+        data_height = input_data_tensor.shape[1]
+        data_width = input_data_tensor.shape[2]
+        input_channels = input_data_tensor.shape[3]
+
+        kernel_height = kernel_tensor.shape[0]
+        kernel_width = kernel_tensor.shape[1]
+        kernel_input_channels = kernel_tensor.shape[2]
+        output_channels = kernel_tensor.shape[3]
+
+        if input_channels != output_channels: # Note that kernel output_channels is the input channels for this method.
+            raise ValueError("Input data channels do not match kernel channels")
+
+        if use_padding:
+            padding_h = (kernel_height // 2) * 2
+            padding_w = (kernel_width // 2) * 2
+        else:
+            padding_h = 0
+            padding_w = 0
+
+        output_height = (data_height - kernel_height + padding_h) // strides[0] + 1
+        output_width = (data_width - kernel_width + padding_w) // strides[1] + 1
+
+        # For a kernel (7 high, 7 wide, 7 prev channels, 3 output channels),
+        # we want 7 prev channels as the output of this function as we go backward.
+        output = np.zeros((sample_size, output_height, output_width, kernel_input_channels))
+
+        for i in range(sample_size):
+            for j in range(kernel_input_channels):
+                input_t = input_data_tensor[i, :, :, :]
+
+                if use_padding:
+                    input_t = Convolve.pad_cube(input_t, (padding_h / 2, padding_w / 2))
+
+                kernel_t = kernel_tensor[:, :, j,:]
+                output[i, :, :, j] = Convolve.convolve_cube(input_t, kernel_t, strides)
 
         return output

@@ -310,7 +310,7 @@ class TestConvolve(unittest.TestCase):
         expected = output.shape
         num_output_channels = k.shape[3]
 
-        actual = Convolve.convolve_tensor_dataset_back(m, k)
+        actual = Convolve.convolve_tensor_dataset_back_2(m, k)
 
         actual = actual.shape
         result = (actual == expected)
