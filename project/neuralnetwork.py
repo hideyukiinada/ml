@@ -680,7 +680,7 @@ class NeuralNetwork():
                     weights_flipped[:, :, prev_c, c] = np.flip(m2, 1)
 
             # Convolute partial_l_partial_z_padded * weights_flipped
-            cumulative_derivative_to_a_prev = conv.convolve_tensor_dataset_back(partial_l_partial_z_padded,
+            cumulative_derivative_to_a_prev = conv.convolve_tensor_dataset_back_2(partial_l_partial_z_padded,
                                                                                 weights_flipped, use_padding=False)
 
             # Calculate Calculate ∂L/∂W

@@ -106,7 +106,12 @@ class TestConvolve(unittest.TestCase):
 
         k = np.ones((3, 3, 2))  # 3x3 kernel and 2 channels
 
-        actual = Convolve.convolve_tensor(m, k)
+        h_pad = 1
+        w_pad = 1
+
+        m = Convolve.pad_cube(m, (h_pad, w_pad))
+
+        actual = Convolve.convolve_cube(m, k)
 
         self.assertTrue(actual.shape == (2, 2))
 
@@ -126,7 +131,7 @@ class TestConvolve(unittest.TestCase):
 
         k = np.ones((2, 2, 2))  # 2x2 kernel and 2 channels
 
-        actual = Convolve.convolve_tensor(m, k, use_padding=False)
+        actual = Convolve.convolve_cube(m, k)
 
         self.assertTrue(actual.shape == (1, 1))
 
@@ -136,34 +141,6 @@ class TestConvolve(unittest.TestCase):
         expected = expected_0 + expected_1
         result = np.array_equal(actual, expected_0 + expected_1)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
-
-    def test_convolve_tensor_output_8(self):
-        """
-        Test convolve layers.
-        """
-        m = np.ones((64, 64, 3))  # 3 layer 2x2 matrix
-        m[:, :, 1] = m[:, :, 1] * 2.0  # Second channel to all 2s.
-        k = np.ones((5, 5, 3, 8))  # 5x5 kernel with 3 channels, 8 output channels
-        expected_output_shape = np.zeros((64, 64, 8)).shape
-
-        actual = Convolve.convolve_tensor_multi_channel(m, k)
-
-        # check shape
-        self.assertTrue(actual.shape == expected_output_shape, "Unexpected shape")
-
-    def test_convolve_tensor_output_8_no_padding(self):
-        """
-        Test convolve layers.
-        """
-        m = np.ones((64, 64, 3))  # 3 layer 2x2 matrix
-        m[:, :, 1] = m[:, :, 1] * 2.0  # Second channel to all 2s.
-        k = np.ones((5, 5, 3, 8))  # 5x5 kernel with 3 channels, 8 output channels
-        expected_output_shape = np.zeros((60, 60, 8)).shape
-
-        actual = Convolve.convolve_tensor_multi_channel(m, k, use_padding=False)
-
-        # check shape
-        self.assertTrue(actual.shape == expected_output_shape, "Unexpected shape")
 
     def test_convolve_tensor_8_channel_output_for_3_channel_input_training_set(self):
         """
@@ -200,29 +177,6 @@ class TestConvolve(unittest.TestCase):
         actual = self.dataset
 
         actual = actual.shape
-        result = (actual == expected)
-        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
-
-    def test_convolve_tensor_8_channel_output_for_3_channel_input_with_bias(self):
-        """
-        Test convolve layers.
-        """
-        training_set_size = 100
-
-        m = np.ones((training_set_size, 64, 64, 3))  # 3 input channel 64x64 matrix
-
-        k = np.ones((3, 3, 3, 8))  # 3x3 kernel, 3 input, 8 output channels
-        bias = np.zeros((8))
-
-        output = np.zeros((training_set_size, 64, 64, 8))
-        expected = output.shape
-        # num_output_channels = k.shape[0]
-
-        for i in range(training_set_size):
-            actual = Convolve.convolve_tensor_multi_channel(m[i, :], k, bias)
-            output[i] = actual
-
-        actual = output.shape
         result = (actual == expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
 
@@ -283,20 +237,6 @@ class TestConvolve(unittest.TestCase):
         actual = actual.shape
         result = (actual == expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
-
-    def test_convolve_tensor_output_8_back(self):
-        """
-        Test convolve layers.
-        """
-        m = np.ones((64, 64, 8))  # 3 layer 2x2 matrix
-        k = np.ones((5, 5, 3, 8))  # 5x5 kernel with 3 channels, 8 output channels
-        expected_output_shape = np.zeros((64, 64, 3)).shape
-
-        actual = Convolve.convolve_tensor_multi_channel_back(m, k)
-
-        # check shape
-        self.assertTrue(actual.shape == expected_output_shape, "Unexpected shape")
-
 
     def test_convolve_training_set_back(self):
         """
