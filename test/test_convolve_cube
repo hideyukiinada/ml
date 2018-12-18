@@ -208,6 +208,39 @@ class TestConvolveCube(unittest.TestCase):
         result = (actual == expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
 
+    def test_flip_weight(self):
+        """
+        Test flip weight.
+        """
+
+        k = np.array([
+            [
+                [[1.11, 1.12, 1.13], [1.21, 1.22, 1.23]], [[2.11, 2.12, 2.13], [2.21, 2.22, 2.23]]
+            ],
+            [
+                [[3.11, 3.12, 3.13], [3.21, 3.22, 3.23]], [[4.11, 4.12, 4.13], [4.21, 4.22, 4.23]]
+            ],
+        ])
+
+        expected_shape = (2, 2, 2, 3)
+        actual = Convolve.flip_weight(k)
+
+        actual_shape = actual.shape
+        result = (actual_shape == expected_shape)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (
+        actual_shape, expected_shape))
+
+        expected = np.array([
+            [
+                [[4.21, 4.22, 4.23], [4.11, 4.12, 4.13]], [[3.21, 3.22, 3.23], [3.11, 3.12, 3.13]]
+            ],
+            [
+                [[2.21, 2.22, 2.23], [2.11, 2.12, 2.13]], [[1.21, 1.22, 1.23], [1.11, 1.12, 1.13]]
+            ]
+        ])
+
+        result = (actual == expected)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
 
 
 def main():

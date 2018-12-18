@@ -641,43 +641,25 @@ class NeuralNetwork():
             else:  # if strides == 1
                 partial_l_partial_z_interweaved = cumulative_derivative_to_z
 
-            # # Step 2.  Zeropad
-            # h = partial_l_partial_z_interweaved.shape[1]  # e.g. 32
-            # w = partial_l_partial_z_interweaved.shape[2]  # e.g. 32
-            # h2 = h + (this_layer.kernel_shape[0] // 2) * 2  # e.g. 34
-            # w2 = w + (this_layer.kernel_shape[1] // 2) * 2  # e.g. 34
-            # l1 = list()
-            # for i in range(dataset_size):
-            #     l2 = list()
-            #     for c in range(channels):
-            #         padded = conv.pad_matrix_uniform(partial_l_partial_z_interweaved[i, :, :, c],
-            #                                          this_layer.kernel_shape[0] // 2)  # FIXME for non-square matrix
-            #         l2.append(padded)
-            #
-            #     l2np = np.array(l2)
-            #     l2combined = np.concatenate((l2np))
-            #     l2stacked = l2combined.reshape((h2, w2, channels))
-            #     l1.append(l2stacked)
-            #
-            # l1np = np.array(l1)
-            # l1combined = np.concatenate((l1np))
-            # partial_l_partial_z_padded = l1combined.reshape((dataset_size, h2, w2, channels))  # e.g. 128, 34, 34, 8
+            # Step 2.  Zeropad
+            # This step is done in convolve_tensor_dataset_back_2()
 
             # Step 3. Flip W vertically and horizontally
             weights = self.weight[layer_index]
-
-            h = weights.shape[0]
-            w = weights.shape[1]
-            prev_channels = weights.shape[2]
-            channels = weights.shape[3]
-
-            weights_flipped = np.zeros((h, w, prev_channels, channels))
-
-            for c in range(channels):
-                for prev_c in range(prev_channels):
-                    m = weights[:, :, prev_c, c]
-                    m2 = np.flip(m, 0)
-                    weights_flipped[:, :, prev_c, c] = np.flip(m2, 1)
+            weights_flipped = conv.flip_weight(weights)
+            
+            # h = weights.shape[0]
+            # w = weights.shape[1]
+            # prev_channels = weights.shape[2]
+            # channels = weights.shape[3]
+            #
+            # weights_flipped = np.zeros((h, w, prev_channels, channels))
+            #
+            # for c in range(channels):
+            #     for prev_c in range(prev_channels):
+            #         m = weights[:, :, prev_c, c]
+            #         m2 = np.flip(m, 0)
+            #         weights_flipped[:, :, prev_c, c] = np.flip(m2, 1)
 
             # Convolute partial_l_partial_z_padded * weights_flipped
             cumulative_derivative_to_a_prev = conv.convolve_tensor_dataset_back_2(partial_l_partial_z_interweaved,
