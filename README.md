@@ -18,4 +18,4 @@ Have a look at [read me in examples](https://github.com/hideyukiinada/ml/blob/ma
 
 # Upcoming features
 * Convolutional Neural Network
-    (I am in the middle of implementing CNN.  Backprop calculation is documented [here]( https://hideyukiinada.github.io/cnn_backprop_strides2.html).)
+    (I am in the middle of implementing CNN.  Backprop calculation is documented [here]( https://hideyukiinada.github.io/cnn_backprop_strides2.html).).  The code checked-in in this repo is still experimental and being debugged, so please hold off on using it in your application. 
