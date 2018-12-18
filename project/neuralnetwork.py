@@ -690,32 +690,37 @@ class NeuralNetwork():
             # Step 2. Zero-pad a_prev
             a_prev = self.a[layer_index - 1]
 
-            h = a_prev.shape[1]  # e.g. 32
-            w = a_prev.shape[2]  # e.g. 32
-            channels = a_prev.shape[3]
-            h2 = h + (this_layer.kernel_shape[0] // 2) * 2  # e.g. 34
-            w2 = w + (this_layer.kernel_shape[1] // 2) * 2  # e.g. 34
-            l1 = list()
-            for i in range(dataset_size):
-                l2 = list()
-                for c in range(channels):
-                    padded = conv.pad_matrix_uniform(partial_l_partial_z_interweaved[i, :, :, c],
-                                                     this_layer.kernel_shape[0] // 2)  # FIXME for non-square matrix
-                    l2.append(padded)
+            # h = a_prev.shape[1]  # e.g. 32
+            # w = a_prev.shape[2]  # e.g. 32
+            # channels = a_prev.shape[3]
+            # h2 = h + (this_layer.kernel_shape[0] // 2) * 2  # e.g. 34
+            # w2 = w + (this_layer.kernel_shape[1] // 2) * 2  # e.g. 34
+            # l1 = list()
+            # for i in range(dataset_size):
+            #     l2 = list()
+            #     for c in range(channels):
+            #         padded = conv.pad_matrix_uniform(partial_l_partial_z_interweaved[i, :, :, c],
+            #                                          this_layer.kernel_shape[0] // 2)  # FIXME for non-square matrix
+            #         l2.append(padded)
+            #
+            #     l2np = np.array(l2)
+            #     l2combined = np.concatenate((l2np))
+            #     l2stacked = l2combined.reshape((h2, w2, channels))
+            #     l1.append(l2stacked)
+            #
+            # l1np = np.array(l1)
+            # l1combined = np.concatenate((l1np))
+            # a_prev_padded = l1combined.reshape((dataset_size, h2, w2, channels))  # e.g. 128, 34, 34, 8
 
-                l2np = np.array(l2)
-                l2combined = np.concatenate((l2np))
-                l2stacked = l2combined.reshape((h2, w2, channels))
-                l1.append(l2stacked)
-
-            l1np = np.array(l1)
-            l1combined = np.concatenate((l1np))
-            a_prev_padded = l1combined.reshape((dataset_size, h2, w2, channels))  # e.g. 128, 34, 34, 8
+            kernel_width = self.gradient_weight[layer_index].shape[0]
+            kernel_height = self.gradient_weight[layer_index].shape[0]
+            pad_h = kernel_height // 2
+            pad_w = kernel_width // 2
 
             # Step 3. Convolve two matrices
-            cumulative_derivative_to_w = conv.convolve_two_datasets_calc_mean(a_prev_padded,
+            cumulative_derivative_to_w = conv.convolve_two_datasets_calc_mean(a_prev,
                                                                               partial_l_partial_z_interweaved,
-                                                                              use_padding=False)
+                                                                              use_padding=True, padding=(pad_h, pad_w))
             self.gradient_weight[layer_index] = cumulative_derivative_to_w
 
             # Calculate Calculate ∂L/∂bias

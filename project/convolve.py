@@ -143,7 +143,7 @@ def _calculate_padding(kernel):
     return ((row_pad_count_top, row_pad_count_bottom), (col_pad_count_left, col_pad_count_right))
 
 
-def _pad_matrix(m, kernel):
+def _pad_matrix(m, kernel, padding = None):
     """
     Zero-pad before convolution to keep the output matrix the same size as the input matrix.
 
@@ -153,6 +153,10 @@ def _pad_matrix(m, kernel):
         Matrix
     k: ndarray
         Convolution kernel
+    padding: tuple of int
+        (padding height, padding width) on one side of the tensor.
+        Total padding for the height is (padding height) * 2.
+        Total padding for the weight is (padding weight) * 2.
 
     Returns
     -------
@@ -160,8 +164,14 @@ def _pad_matrix(m, kernel):
         Matrix padded with 0 along the edges.
     """
 
-    (row_pad_count_top, row_pad_count_bottom), (
+    if padding is None:
+        (row_pad_count_top, row_pad_count_bottom), (
         col_pad_count_left, col_pad_count_right) = _calculate_padding(kernel)
+    else:
+        row_pad_count_top = padding[0]
+        row_pad_count_bottom = padding[0]
+        col_pad_count_left = padding[1]
+        col_pad_count_right = padding[1]
 
     # Zero-pad
     return np.lib.pad(m,
@@ -401,7 +411,7 @@ class Convolve():
         return _convolve2d_jit(m, kernel, strides, target_height, target_width)
 
     @staticmethod
-    def convolve2d(m, kernel, strides=(1, 1), use_padding=True):
+    def convolve2d(m, kernel, strides=(1, 1), use_padding=True, padding=None):
         """
         Convolve a 2D matrix with a kernel with padding if specified by the caller.
 
@@ -413,9 +423,13 @@ class Convolve():
             Convolution kernel
         strides: tuple
             Step size in each axis
-        padding: bool
+        use_padding: bool
             True if m should be zero-padded before convolution.  This is to keep the output matrix the same size.
             False if no padding should be applied before convolution.
+        padding: tuple of int
+            (padding height, padding width) on one side of the tensor.
+            Total padding for the height is (padding height) * 2.
+            Total padding for the weight is (padding weight) * 2.
 
         Returns
         -------
@@ -434,7 +448,7 @@ class Convolve():
         """
 
         if use_padding:
-            m = _pad_matrix(m, kernel)
+            m = _pad_matrix(m, kernel, padding)
 
         return Convolve._convolve2d(m, kernel, strides=strides)
 
@@ -466,7 +480,8 @@ class Convolve():
         return _convolve_cube_jit(m, kernel, strides)
 
     @staticmethod
-    def convolve_two_datasets_calc_mean(input_data_tensor, kernel_data_tensor, strides=(1, 1), use_padding=True):
+    def convolve_two_datasets_calc_mean(input_data_tensor, kernel_data_tensor, strides=(1, 1), use_padding=True,
+                                        padding=None):
         """
         Convolve two datasets with second data acting a kernel and calculate the mean.
         This is to be used for backprop to calculate the gradient of a kernel.
@@ -481,9 +496,13 @@ class Convolve():
             It has the shape (dataset size, row count, col count, input channels)
         strides: tuple
             Step size in each axis
-        padding: bool
+        use_padding: bool
             True if m should be zero-padded before convolution.  This is to keep the output matrix the same size.
             False if no padding should be applied before convolution.
+        padding: tuple of int
+            (padding height, padding width) on one side of the tensor.
+            Total padding for the height is (padding height) * 2.
+            Total padding for the weight is (padding weight) * 2.
 
         Returns
         -------
@@ -497,7 +516,8 @@ class Convolve():
             the matrix and the kernel.
 
         """
-        k = Convolve.convolve_two_datasets_2(input_data_tensor, kernel_data_tensor, strides, use_padding)
+        k = Convolve.convolve_two_datasets_2(input_data_tensor, kernel_data_tensor, strides=strides,
+                                             use_padding=use_padding, padding=padding)
         dataset_size = input_data_tensor.shape[0]
 
         k_sum = k.sum(axis=0)
@@ -522,7 +542,7 @@ class Convolve():
             Bias that is applied to each element after convolution. There is 1 bias for each output channel.
         strides: tuple
             Step size in each axis
-        padding: bool
+        use_padding: bool
             True if m should be zero-padded before convolution.  This is to keep the output matrix the same size.
             False if no padding should be applied before convolution.
 
@@ -653,7 +673,7 @@ class Convolve():
         return output
 
     @staticmethod
-    def convolve_two_datasets_2(input_data_tensor, kernel_data_tensor, strides=(1, 1), use_padding=True):
+    def convolve_two_datasets_2(input_data_tensor, kernel_data_tensor, strides=(1, 1), use_padding=True, padding=None):
         """
         Convolve two datasets with second data acting a kernel.
         This is to be used for backprop to calculate the gradient of a kernel.
@@ -668,9 +688,13 @@ class Convolve():
             It has the shape (dataset size, row count, col count, input channels)
         strides: tuple
             Step size in each axis
-        padding: bool
+        use_padding: bool
             True if m should be zero-padded before convolution.  This is to keep the output matrix the same size.
             False if no padding should be applied before convolution.
+        padding: tuple of int
+            (padding height, padding width) on one side of the tensor.
+            Total padding for the height is (padding height) * 2.
+            Total padding for the weight is (padding weight) * 2.
 
         Returns
         -------
@@ -702,8 +726,12 @@ class Convolve():
         input_channels_2 = kernel_data_tensor.shape[3]
 
         if use_padding:
-            padding_h = (kernel_height // 2) * 2
-            padding_w = (kernel_width // 2) * 2
+            if padding is None:
+                padding_h = (kernel_height // 2) * 2
+                padding_w = (kernel_width // 2) * 2
+            else:
+                padding_h = padding[0] * 2
+                padding_w = padding[1] * 2
         else:
             padding_h = 0
             padding_w = 0
@@ -723,6 +751,6 @@ class Convolve():
                     input_2 = kernel_data_tensor[i, :, :, k]
 
                     output[i, :, :, j, k] = Convolve.convolve2d(input_1, input_2, strides=strides,
-                                                                use_padding=use_padding)
+                                                                use_padding=use_padding, padding=padding)
 
         return output
