@@ -27,6 +27,7 @@ from project.neuralnetwork import ConvLayer
 from project.activationfunction import ActivationFunction as af
 from project.costfunction import CostFunction as cf
 from project.optimizer import Optimizer as opt
+from project.weightparameter import WeightParameter as wparam
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
@@ -61,7 +62,7 @@ def example():
     model.add(Layer(10, activation=af.SIGMOID))
 
     nn = NeuralNetwork(model, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY,
-                       optimizer=opt.SGD)  # layer no: 0, 1, 2
+                       optimizer=opt.SGD, weight_parameter=wparam(init_type=wparam.NORMAL, multiplier=0.1))
 
     nn.fit(x, y_oh, epochs=1, verbose=True, interval=1)
 
