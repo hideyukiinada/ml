@@ -228,7 +228,7 @@ class TestConvolveCube(unittest.TestCase):
         actual_shape = actual.shape
         result = (actual_shape == expected_shape)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (
-        actual_shape, expected_shape))
+            actual_shape, expected_shape))
 
         expected = np.array([
             [
@@ -239,7 +239,7 @@ class TestConvolveCube(unittest.TestCase):
             ]
         ])
 
-        result = (actual == expected)
+        result = np.allclose(actual, expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
 
 

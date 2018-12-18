@@ -186,44 +186,6 @@ class TestConvolvePad(unittest.TestCase):
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
 
 
-    # def test_convolve_tensor_8_channel_output_for_3_channel_input_training_set(self):
-    #     """
-    #     Test convolve layers.
-    #     """
-    #     training_set_size = 2
-    #
-    #     m = np.ones((training_set_size, 64, 64, 3))  # 3 layer 64x64 matrix
-    #     m[1] = m[1] * 2.0
-    #
-    #     k = np.ones((3, 3, 3, 8))  # 3x3 kernel with 3 channels, 8 output channels
-    #
-    #     expected = np.zeros((training_set_size, 64, 64, 8)).shape
-    #
-    #     actual = Convolve.convolve_tensor_dataset_2(m, k)
-    #
-    #     actual = actual.shape
-    #     result = (actual == expected)
-    #     self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
-    #
-
-    # def test_convolve_training_set_2(self):
-    #     """
-    #     Test convolve training set
-    #     """
-    #     training_set_size = 1
-    #
-    #     m = np.ones((training_set_size, 64, 64, 2))  # 1 layer matrix
-    #     k = np.ones((7, 7, 2, 3))  # 7x7 kernel with 2 channels, 3 output channels
-    #     output = np.zeros((training_set_size, 64, 64, 3))
-    #     expected = output.shape
-    #     num_output_channels = k.shape[3]
-    #
-    #     actual = Convolve.convolve_tensor_dataset_2(m, k)
-    #
-    #     actual = actual.shape
-    #     result = (actual == expected)
-    #     self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
-
 def main():
     """Invoke test function"""
 

@@ -647,19 +647,6 @@ class NeuralNetwork():
             # Step 3. Flip W vertically and horizontally
             weights = self.weight[layer_index]
             weights_flipped = conv.flip_weight(weights)
-            
-            # h = weights.shape[0]
-            # w = weights.shape[1]
-            # prev_channels = weights.shape[2]
-            # channels = weights.shape[3]
-            #
-            # weights_flipped = np.zeros((h, w, prev_channels, channels))
-            #
-            # for c in range(channels):
-            #     for prev_c in range(prev_channels):
-            #         m = weights[:, :, prev_c, c]
-            #         m2 = np.flip(m, 0)
-            #         weights_flipped[:, :, prev_c, c] = np.flip(m2, 1)
 
             # Convolute partial_l_partial_z_padded * weights_flipped
             cumulative_derivative_to_a_prev = conv.convolve_tensor_dataset_back_2(partial_l_partial_z_interweaved,

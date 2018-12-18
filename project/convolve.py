@@ -291,6 +291,7 @@ def _zero_interweave(m, pad_count):
 
     return m3
 
+
 def _flip_weight(weight):
     """
     Flip weight vertically and horizontally
@@ -306,18 +307,11 @@ def _flip_weight(weight):
         Flipped array
     """
 
-    h = weight.shape[0]
-    w = weight.shape[1]
-    prev_channels = weight.shape[2]
-    channels = weight.shape[3]
+    a = np.flip(weight,0)
+    b = np.flip(a, 1)
+    c = np.flip(b, 2)
 
-    weight_flipped = np.zeros((h, w, prev_channels, channels))
-
-    for i in range(channels):
-        for j in range(prev_channels):
-            a = weight[:, :, j, i]
-            b = np.flip(a, 0)
-            weight_flipped[:, :, j, i] = np.flip(b, 1)
+    weight_flipped = c
 
     return weight_flipped
 
@@ -784,7 +778,8 @@ class Convolve():
 
         return output
 
-    def flip_weight(self, weight):
+    @staticmethod
+    def flip_weight(weight):
         """
         Flip weight vertically and horizontally
 
