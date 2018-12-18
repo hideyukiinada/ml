@@ -266,7 +266,7 @@ class TestConvolve(unittest.TestCase):
         lz = np.ones((training_set_size, 16, 16, 8))
         expected = (training_set_size, 3, 3, 3, 8)
 
-        actual = Convolve.convolve_two_datasets(a_prev, lz, use_padding=False)
+        actual = Convolve.convolve_two_datasets_2(a_prev, lz, use_padding=False)
 
         actual = actual.shape
         result = (actual == expected)
