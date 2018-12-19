@@ -622,21 +622,23 @@ class NeuralNetwork():
             w = cumulative_derivative_to_z.shape[2]
             strides = this_layer.strides[0]  # FIXME for non-square matrix
             if strides > 1:
-                l1 = list()
-                for i in range(dataset_size):
-                    l2 = list()
-                    for c in range(channels):  # shape = (dataset_size, h, w)
-                        padded = conv.zero_interweave(cumulative_derivative_to_z[i, :, :, c], strides - 1)
-                        l2.append(padded)
+                # l1 = list()
+                # for i in range(dataset_size):
+                #     l2 = list()
+                #     for c in range(channels):  # shape = (dataset_size, h, w)
+                #         padded = conv.zero_interweave(cumulative_derivative_to_z[i, :, :, c], strides - 1)
+                #         l2.append(padded)
+                #
+                #     l2np = np.array(l2)
+                #     l2combined = np.concatenate((l2np), axis=2)
+                #     l2stacked = l2combined.reshape((h * 2, w * 2, channels))
+                #     l1.append(l2stacked)
+                #
+                # l1np = np.array(l1)
+                # l1combined = np.concatenate((l1np),axis=0)
+                # partial_l_partial_z_interweaved = l1combined.reshape((dataset_size, h * 2, w * 2, channels))
 
-                    l2np = np.array(l2)
-                    l2combined = np.concatenate((l2np), axis=2)
-                    l2stacked = l2combined.reshape((h * 2, w * 2, channels))
-                    l1.append(l2stacked)
-
-                l1np = np.array(l1)
-                l1combined = np.concatenate((l1np),axis=0)
-                partial_l_partial_z_interweaved = l1combined.reshape((dataset_size, h * 2, w * 2, channels))
+                partial_l_partial_z_interweaved = conv.zero_interweave_dataset(cumulative_derivative_to_z, strides - 1)
 
             else:  # if strides == 1
                 partial_l_partial_z_interweaved = cumulative_derivative_to_z

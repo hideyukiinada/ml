@@ -832,7 +832,7 @@ class Convolve():
         w = m.shape[2]
         channels = m.shape[3]
 
-        padded = np.zeros((dataset_size, h+pad_count*2, w+pad_count*2,channels))
+        padded = np.zeros((dataset_size, h*(1+pad_count), w*(1+pad_count),channels))
 
         for i in range(dataset_size):
             for j in range(channels):
