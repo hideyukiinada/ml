@@ -231,7 +231,7 @@ def _pad_cube(m, h_pad, w_pad):
 
     return padded_tensor
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def _zero_interweave(m, pad_count):
     """
     Add the same number of padding row and column to m in each axis.
@@ -788,3 +788,56 @@ class Convolve():
             Flipped array
         """
         return _flip_weight(weight)
+
+    @staticmethod
+    def zero_interweave_dataset(m, pad_count):
+        """
+        Add the same number of padding row and column to m in each axis.
+
+        For example, if you specify 1 in pad_count, the following matrix
+        1 2
+        3 4
+
+        is transformed to
+
+        1 0 2 0
+        0 0 0 0
+        3 0 4 0
+        0 0 0 0
+
+        Parameters
+        ----------
+        m: ndarray
+            Tensor of shape (dataset size, height, width, channels)
+        pad_count: int
+            Number of padding row and column to be added
+
+        Returns
+        -------
+        out: ndarray
+            Matrix padded with 0 along the edges.
+
+        Raises
+        ------
+        ValueError
+            If dataset does not match the shape expected.
+        """
+
+        if len(m.shape) != 4:
+            raise ValueError("Invalid shape for data.  Has to be (dataset size, height, width, channels).")
+
+        # Allocate new tensor
+        dataset_size = m.shape[0]
+        h = m.shape[1]
+        w = m.shape[2]
+        channels = m.shape[3]
+
+        padded = np.zeros((dataset_size, h+pad_count*2, w+pad_count*2,channels))
+
+        for i in range(dataset_size):
+            for j in range(channels):
+                input_matrix = m[i,:,:,j]
+                output_matrix = _zero_interweave(input_matrix, pad_count)
+                padded[i,:,:,j] = output_matrix
+
+        return padded

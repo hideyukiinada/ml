@@ -630,12 +630,12 @@ class NeuralNetwork():
                         l2.append(padded)
 
                     l2np = np.array(l2)
-                    l2combined = np.concatenate((l2np))
+                    l2combined = np.concatenate((l2np), axis=2)
                     l2stacked = l2combined.reshape((h * 2, w * 2, channels))
                     l1.append(l2stacked)
 
                 l1np = np.array(l1)
-                l1combined = np.concatenate((l1np))
+                l1combined = np.concatenate((l1np),axis=0)
                 partial_l_partial_z_interweaved = l1combined.reshape((dataset_size, h * 2, w * 2, channels))
 
             else:  # if strides == 1

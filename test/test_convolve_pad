@@ -185,6 +185,49 @@ class TestConvolvePad(unittest.TestCase):
         result = np.allclose(actual, expected)
         self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
 
+    def test_zero_interweave_dataset_shape(self):
+        """
+        Test zero interweave for a dataset
+        """
+
+        m = np.ones((10, 2, 2, 3))  # dataset size, height, width, channels
+
+        m_padded = Convolve.zero_interweave_dataset(m, 1)
+
+        expected = (10, 4, 4, 3)
+        actual = m_padded.shape
+        result = np.allclose(actual, expected)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
+
+    def test_zero_interweave_dataset_value(self):
+        """
+        Test zero interweave for a dataset
+        """
+
+        m = np.ones((10, 2, 2, 3))  # dataset size, height, width, channels
+
+        m_padded = Convolve.zero_interweave_dataset(m, 1)
+
+        expected = np.array(
+            [
+                [
+                    [1, 1, 1], [0, 0, 0], [1, 1, 1], [0, 0, 0]
+                ],
+                [
+                    [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]
+                ],
+                [
+                    [1, 1, 1], [0, 0, 0], [1, 1, 1], [0, 0, 0]
+                ],
+                [
+                    [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]
+                ]
+            ])
+
+        actual = m_padded[0]
+        result = np.allclose(actual, expected)
+        self.assertTrue(result, "actual does not match expected. \nActual:\n%s, \nExpected:\n%s" % (actual, expected))
+
 
 def main():
     """Invoke test function"""
