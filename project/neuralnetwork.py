@@ -385,7 +385,7 @@ class NeuralNetwork():
         self.optimizer_settings = optimizer_settings
         self.cost_function = cost_function
         self.learning_rate = learning_rate
-        self.dataset_size = 0  # Dataset size to be initialized in fit()
+        self._dataset_size = 0  # Dataset size: Size of samples fed to fit().  Dataset size to be initialized in fit()
         self.batch_size = batch_size
         self.use_layer_from = use_layer_from
         self.weight_parameter = weight_parameter
@@ -543,8 +543,6 @@ class NeuralNetwork():
             is the same as the shape of the layer (dataset size by the number of units for the layer).
         layer_index: int
             Current layer index
-        dataset_size: int
-            Size of input
 
         Returns
         -------
@@ -552,6 +550,8 @@ class NeuralNetwork():
             Updated accumulated derivative from the last layer
 
         """
+
+        current_batch_size = derivative_cumulative.shape[0]
 
         log.debug("Backprop: Layer index: %d" % (layer_index))
 
@@ -592,7 +592,7 @@ class NeuralNetwork():
             cumulative_derivative_to_w = pz_pw.T.dot(cumulative_derivative_to_z)
 
             # At this point, shape of cumulative_derivative_to_w is the same as the weight of this layer
-            cumulative_derivative_to_w /= self.dataset_size
+            cumulative_derivative_to_w /= current_batch_size
             self.gradient_weight[layer_index] = cumulative_derivative_to_w
 
             # Derivative of z with respect to bias
@@ -600,7 +600,7 @@ class NeuralNetwork():
             cumulative_derivative_to_b = np.sum(cumulative_derivative_to_z * pz_pb, axis=0)
             # At this point, shape of cumulative_derivative_to_b is the same as the bias of this layer
 
-            cumulative_derivative_to_b /= self.dataset_size
+            cumulative_derivative_to_b /= current_batch_size
             self.gradient_bias[layer_index] = cumulative_derivative_to_b
 
             # Derivative of z with respect to previous layer's activation
@@ -617,7 +617,7 @@ class NeuralNetwork():
             # Step 1. Interweave ∂L/∂z with zeros
             # Determine the number of output channels
             channels = cumulative_derivative_to_z.shape[3]
-            dataset_size = cumulative_derivative_to_z.shape[0]
+            # dataset_size = cumulative_derivative_to_z.shape[0]
             h = cumulative_derivative_to_z.shape[1]
             w = cumulative_derivative_to_z.shape[2]
             strides = this_layer.strides[0]  # FIXME for non-square matrix
@@ -674,7 +674,7 @@ class NeuralNetwork():
             # Calculate Calculate ∂L/∂bias
             pz_pb = 1.0
             cumulative_derivative_to_b = np.sum(cumulative_derivative_to_z * pz_pb)
-            cumulative_derivative_to_b /= self.dataset_size
+            cumulative_derivative_to_b /= current_batch_size
             self.gradient_bias[layer_index] = cumulative_derivative_to_b
 
         return cumulative_derivative_to_a_prev  # Shape is the same as the previous layer's activation.
@@ -746,7 +746,7 @@ class NeuralNetwork():
             Number of epochs to show the cost if verbose is set to true
         """
 
-        def process_verbose(y, y_hat, batch_index, batch_loop_count, epoch_index, epoch_size, dataset_size):
+        def process_verbose(y, y_hat, batch_index, batch_loop_count, epoch_index, epoch_size, current_batch_size):
             """
             Helper function to output cost at regular intervals
 
@@ -764,7 +764,7 @@ class NeuralNetwork():
                 0-based epoch index
             epoch_size: int
                 Number of epochs
-            dataset_size: int
+            current_batch_size : int
                 Dataset size in this batch
             """
             cost = -1
@@ -775,11 +775,14 @@ class NeuralNetwork():
 
             if (self.batch_size >= 32):
                 print("[Epoch %d/%d - Batch %d/%d] Cost: %.07f. Batch size: %d" %
-                      (epoch_index + 1, epoch_size, batch_index + 1, batch_loop_count, cost, dataset_size))
+                      (epoch_index + 1, epoch_size, batch_index + 1, batch_loop_count, cost, current_batch_size ))
             else:
                 if (batch_index % 100 == 0):
                     print("[Epoch %d/%d - Batch %d/%d] Cost: %.07f. Batch size: %d" %
-                          (epoch_index + 1, epoch_size, batch_index + 1, batch_loop_count, cost, dataset_size))
+                          (epoch_index + 1, epoch_size, batch_index + 1, batch_loop_count, cost, current_batch_size ))
+
+
+        self._dataset_size = x.shape[0]
 
         # check to see if we should use layers from other object
         if self.use_layer_from is not None:
@@ -807,36 +810,37 @@ class NeuralNetwork():
             for i in range(epochs):
 
                 next_k = 0
-                loop_count = int(x.shape[0] / self.batch_size)  # for m = 5, batch_size = 2, this results in [0, 1]
+                loop_count = int(self._dataset_size / self.batch_size)  # for m = 5, batch_size = 2, this results in [0, 1]
+                current_batch_size = 0
                 for j in range(loop_count):
 
-                    self.dataset_size = self.batch_size
-                    k = j * self.dataset_size
-                    next_k = k + self.dataset_size
+                    current_batch_size = self.batch_size
+                    k = j * current_batch_size
+                    next_k = k + current_batch_size
                     x_sub = x[k:next_k]
                     y_sub = y[k:next_k]
                     y_hat = self._forward_prop(x_sub)
 
                     if verbose:
-                        process_verbose(y_sub, y_hat, j, loop_count, i, epochs, self.dataset_size)
+                        process_verbose(y_sub, y_hat, j, loop_count, i, epochs, current_batch_size )
 
                     self._backprop(x_sub, y_sub, y_hat)
 
                 # remainder
-                self.dataset_size = x.shape[0] - next_k
-                if self.dataset_size > 0:
+                last_batch_size = x.shape[0] - next_k
+                if last_batch_size  > 0:
                     k = next_k
-                    x_sub = x[k:k + self.dataset_size]
-                    y_sub = y[k:k + self.dataset_size]
+                    x_sub = x[k:k + last_batch_size ]
+                    y_sub = y[k:k + last_batch_size ]
                     y_hat = self._forward_prop(x_sub)
 
                     if verbose:
-                        process_verbose(y_sub, y_hat, j + 1, loop_count + 1, i, epochs, self.dataset_size)
+                        process_verbose(y_sub, y_hat, j + 1, loop_count + 1, i, epochs, last_batch_size )
 
                     self._backprop(x_sub, y_sub, y_hat)
 
         else:  # Batch gradient
-            self.dataset_size = x.shape[0]
+            current_batch_size = x.shape[0]
 
             for i in range(epochs):
                 y_hat = self._forward_prop(x)

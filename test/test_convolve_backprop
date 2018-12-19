@@ -25,6 +25,7 @@ from project.neuralnetwork import Layer
 from project.neuralnetwork import ConvLayer
 from project.activationfunction import ActivationFunction as af
 from project.costfunction import CostFunction as cf
+from project.optimizer import Optimizer as opt
 
 class TestConvolveBackProp(unittest.TestCase):
 
@@ -35,7 +36,7 @@ class TestConvolveBackProp(unittest.TestCase):
 
         start_time = time.monotonic()
 
-        x = np.random.randn(10, 64, 64, 3)  # Training set size = 100, 3 channels
+        x = np.random.randn(2000, 64, 64, 3)  # Training set size = 100, 3 channels
         x = np.abs(x)
         x[0:x.shape[0]//2] = -x[0:x.shape[0]//2]
 
@@ -49,9 +50,9 @@ class TestConvolveBackProp(unittest.TestCase):
         model.add(Layer(13, activation=af.RELU))
         model.add(Layer(1, activation=af.SIGMOID))
 
-        nn = NeuralNetwork(model, learning_rate=1e-2, cost_function=cf.CROSS_ENTROPY)  # layer no: 0, 1, 2
+        nn = NeuralNetwork(model, learning_rate=1e-2, cost_function=cf.CROSS_ENTROPY, optimizer=opt.SGD, batch_size=32)  # layer no: 0, 1, 2
 
-        nn.fit(x, y, epochs=5, verbose=True, interval=1)
+        nn.fit(x, y, epochs=10, verbose=True, interval=1)
         y_test = nn.predict(x)
 
         expected = (x.shape[0], 1)
