@@ -64,7 +64,7 @@ def example():
     nn = NeuralNetwork(model, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY,
                        optimizer=opt.SGD, weight_parameter=wparam(init_type=wparam.NORMAL, multiplier=0.1), batch_size=1)
 
-    nn.fit(x, y_oh, epochs=2, verbose=True, interval=1)
+    nn.fit(x, y_oh, epochs=4, verbose=True, interval=1)
 
     # predict
     y_hat_oh = nn.predict(x_test)
