@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 """
-CNN implementation is still experimental and being tested, so please hold off on running this script
-to assess CNN for your application.
-
 Example code to demo NeuralNetwork class for digit recognition using MNIST data.
 
 __author__ = "Hide Inada"
