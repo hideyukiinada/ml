@@ -16,6 +16,7 @@ Have a look at [read me in examples](https://github.com/hideyukiinada/ml/blob/ma
   - Back propagation and gradient descent 
 * Use as a playground to test various technologies in AI (e.g. new optimizer, new cost function, GAN). 
 
-# Upcoming features
+# Latest features
 * Convolutional Neural Network
-    (I am in the middle of implementing CNN.  Backprop calculation is documented [here]( https://hideyukiinada.github.io/cnn_backprop_strides2.html).).  The CNN-related code checked-in in this repo is still experimental.  If you try it and does not work with your parameters, please create an issue.  The accuracy against MNIST digit data with epochs was 97.95% with 4 epochs.
+The CNN-related code checked-in in this repo is still experimental.  If you try it and does not work with your parameters, please create an issue.  The accuracy against MNIST digit data with epochs was 97.95% with 4 epochs.
+Backprop calculation is documented [here]( https://hideyukiinada.github.io/cnn_backprop_strides2.html).
