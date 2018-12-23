@@ -48,6 +48,7 @@ def example():
     y_test_oh = keras.utils.to_categorical(y_test, 10)
 
     model = Model(num_input=28*28)
+    model.add(Layer(1024, activation=af.RELU, dropout=0.5))
     model.add(Layer(512, activation=af.RELU, dropout=0.5))
     model.add(Layer(10, activation=af.SIGMOID))
 

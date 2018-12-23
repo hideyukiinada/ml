@@ -187,6 +187,9 @@ class NeuralNetwork():
     Weight and bias only exist for layers 1 and above.
     """
 
+    MODE_FIT = 0
+    MODE_PREDICT = 1
+
     def _init_weight_forward_prop_data_list(self):
         """
         Allocate list for weight, bias, z, a, gradient of weight, gradient of bias.
@@ -382,7 +385,7 @@ class NeuralNetwork():
         bias_parameter: WeightParameter
             Contains parameters to initialize layer biases
         """
-
+        self.mode = NeuralNetwork.MODE_FIT
         self.model = model
         self.optimizer = optimizer
         self.optimizer_settings = optimizer_settings
@@ -457,14 +460,17 @@ class NeuralNetwork():
             # z = a_prev.dot(self.weight[current_layer_index]) + self.bias[current_layer_index]
 
             if prev_layer.dropout != 1.0:
-                num_activation_prev = self.dropout_vector[current_layer_index-1].shape[0]
-                dropout = prev_layer.dropout
-                num_units_to_drop = int(num_activation_prev * (1-dropout))
-                index_of_units_to_drop = np.random.choice(num_activation_prev, num_units_to_drop)
-                dropout_vector = np.ones((num_activation_prev)) # reset to 1 first
-                dropout_vector[index_of_units_to_drop] = 0
-                self.dropout_vector[current_layer_index - 1] = dropout_vector
-                a_prev_tilda = a_prev * self.dropout_vector[current_layer_index - 1]
+                if self.mode == NeuralNetwork.MODE_FIT:
+                    num_activation_prev = self.dropout_vector[current_layer_index-1].shape[0]
+                    dropout = prev_layer.dropout
+                    num_units_to_drop = int(num_activation_prev * (1-dropout))
+                    index_of_units_to_drop = np.random.choice(num_activation_prev, num_units_to_drop)
+                    dropout_vector = np.ones((num_activation_prev)) # reset to 1 first
+                    dropout_vector[index_of_units_to_drop] = 0
+                    self.dropout_vector[current_layer_index - 1] = dropout_vector
+                    a_prev_tilda = a_prev * self.dropout_vector[current_layer_index - 1]
+                else: # if predict, use all nodes but multiply by the dropout
+                    a_prev_tilda = a_prev * prev_layer.dropout
             else:
                 a_prev_tilda = a_prev
 
@@ -504,6 +510,7 @@ class NeuralNetwork():
         out: ndarray
             Predicted values
         """
+        self.mode = NeuralNetwork.MODE_PREDICT
         return self._forward_prop(x)
 
     def predict_intermediate(self, x, output_layer_index):
@@ -806,6 +813,7 @@ class NeuralNetwork():
 
 
         self._dataset_size = x.shape[0]
+        self.mode = NeuralNetwork.MODE_FIT
 
         # check to see if we should use layers from other object
         if self.use_layer_from is not None:
