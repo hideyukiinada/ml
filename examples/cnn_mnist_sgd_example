@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 """
-CNN implementation is still experimental and being tested, so please hold off on running this script
-to assess CNN for your application.
-
 Example code to demo NeuralNetwork class for digit recognition using MNIST data.
 
 __author__ = "Hide Inada"
@@ -62,9 +59,9 @@ def example():
     model.add(Layer(10, activation=af.SIGMOID))
 
     nn = NeuralNetwork(model, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY,
-                       optimizer=opt.SGD, weight_parameter=wparam(init_type=wparam.NORMAL, multiplier=0.1))
+                       optimizer=opt.SGD, weight_parameter=wparam(init_type=wparam.NORMAL, multiplier=0.1), batch_size=1)
 
-    nn.fit(x, y_oh, epochs=1, verbose=True, interval=1)
+    nn.fit(x, y_oh, epochs=4, verbose=True, interval=1)
 
     # predict
     y_hat_oh = nn.predict(x_test)
