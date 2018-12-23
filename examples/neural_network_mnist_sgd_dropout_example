@@ -23,6 +23,7 @@ from project.neuralnetwork import Layer
 from project.activationfunction import ActivationFunction as af
 from project.costfunction import CostFunction as cf
 from project.optimizer import Optimizer as opt
+from project.weightparameter import WeightParameter as wparam
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
@@ -52,9 +53,10 @@ def example():
     model.add(Layer(512, activation=af.RELU, dropout=0.5))
     model.add(Layer(10, activation=af.SIGMOID))
 
-    nn = NeuralNetwork(model, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY, optimizer=opt.SGD)  # layer no: 0, 1, 2
+    nn = NeuralNetwork(model, learning_rate=0.001, cost_function=cf.CROSS_ENTROPY, optimizer=opt.SGD,
+                       weight_parameter=wparam(init_type=wparam.LAYER_UNIT_COUNT_PROPORTIONAL2))
 
-    nn.fit(x_flat, y_oh, epochs=10, verbose=True, interval=1)
+    nn.fit(x_flat, y_oh, epochs=20, verbose=True, interval=1)
 
     # predict
     y_hat_oh = nn.predict(x_test_flat)
