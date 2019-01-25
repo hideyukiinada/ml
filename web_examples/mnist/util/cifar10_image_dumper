@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+"""
+Dump CIFAR10 images from numpy array to JPG on the file system for viewing
+
+__author__ = "Hide Inada"
+__copyright__ = "Copyright 2018, Hide Inada"
+__license__ = "The MIT License"
+__email__ = "hideyuki@gmail.com"
+"""
+
+import sys
+import os
+import logging
+from pathlib import Path
+
+import cv2 as cv
+import numpy as np
+from keras.datasets import cifar10
+
+log = logging.getLogger(__name__)
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))  # Change the 2nd arg to INFO to suppress debug logging
+
+TMP_FILE_PATH = "/tmp/cifar10_images/"
+NUM_ROW = 10
+NUM_COL = 10
+NUM_IMAGES = NUM_ROW * NUM_COL
+
+IMAGE_HEIGHT = 32
+IMAGE_WIDTH = 32
+IMAGE_CHANNELS = 3
+
+
+def main():
+    """
+    Create image files for viewing from CIFAR10 data.
+
+    This file downloads data via Keras util.
+    """
+    base_path = Path(TMP_FILE_PATH)
+
+    # Download cifar10 data via Keras API
+    (x, y), (x_test, y_test) = cifar10.load_data()  # https://keras.io/datasets/
+
+    target_image = np.zeros((IMAGE_HEIGHT * NUM_ROW, IMAGE_WIDTH * NUM_COL, IMAGE_CHANNELS),dtype=np.uint8)
+
+    for i in range(NUM_ROW):
+        for j in range(NUM_COL):
+            cifar10_image = x[i * NUM_COL + j,:,:,:]
+
+            target_image[(i*IMAGE_HEIGHT):(i*IMAGE_HEIGHT)+IMAGE_HEIGHT, (j*IMAGE_WIDTH):(j*IMAGE_WIDTH)+IMAGE_WIDTH,:] = cifar10_image
+
+    image_path = base_path / Path("cifar10.jpg")
+    output_image = cv.cvtColor(target_image, cv.COLOR_RGB2BGR)
+    cv.imwrite(str(image_path), output_image)
+
+
+if __name__ == "__main__":
+    main()
