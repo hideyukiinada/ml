@@ -16,6 +16,7 @@ Have a look at [read me in examples](https://github.com/hideyukiinada/ml/blob/ma
   - Back propagation and gradient descent 
 * Use as a playground to test various technologies in AI (e.g. new optimizer, new cost function, GAN). 
 
-# Upcoming features
-* Convolutional Neural Network
-    (I am in the middle of implementing CNN.  Backprop calculation is documented [here]( https://hideyukiinada.github.io/cnn_backprop_strides2.html).).  The CNN-related code checked-in in this repo is still experimental and being debugged, so please hold off on using it in your CNN application. As of this [commit](https://github.com/hideyukiinada/ml/commit/0416fa1b195b4d607bb4490453211a2cf29f50eb), accuracy for MNIST digit recognition using my CNN example script was 96.82% with two epochs.
+# Latest features
+* Convolutional Neural Network - 
+  The CNN-related code checked-in in this repo is still experimental.  If you try it and does not work with your parameters,   please create an issue.  Accuracy against MNIST digit data was 97.95% with 4 epochs.
+  Backprop calculation is documented [here]( https://hideyukiinada.github.io/cnn_backprop_strides2.html).

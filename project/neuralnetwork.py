@@ -87,11 +87,11 @@ class Layer():
     Holds meta-information of a single layer of neural network
     """
 
-    def __init__(self, num_units, activation=af.RELU):
+    def __init__(self, num_units, activation=af.RELU, dropout=1.0):
         self.num_units = num_units  # number of units on the layer.
         self.activation = activation  # the activation function for the layer.
         self.layer_type = LayerType.DENSE  # type of the layer
-
+        self.dropout = dropout # Dropout. For now, this is valid for dense layer only.
 
 class ConvLayer(Layer):
     def __init__(self, kernel_shape, channels, strides=(1, 1), use_padding=True, activation=af.RELU, flatten=False,
@@ -187,6 +187,9 @@ class NeuralNetwork():
     Weight and bias only exist for layers 1 and above.
     """
 
+    MODE_FIT = 0
+    MODE_PREDICT = 1
+
     def _init_weight_forward_prop_data_list(self):
         """
         Allocate list for weight, bias, z, a, gradient of weight, gradient of bias.
@@ -223,6 +226,7 @@ class NeuralNetwork():
         self.gradient_bias = list_with_n_elements(1)
         self.z = list_with_n_elements(self.num_layers + 1)
         self.a = list_with_n_elements(self.num_layers + 1)
+        self.dropout_vector = list_with_n_elements(self.num_layers + 1)
         self.kernel_parameter = list_with_n_elements(self.num_layers + 1)
         self.layer_locked = [False] * (self.num_layers + 1)
 
@@ -245,6 +249,8 @@ class NeuralNetwork():
 
                 num_units_this_layer = this_layer.num_units
                 num_units_prev_layer = prev_layer.num_units
+
+                self.dropout_vector[i] = np.ones((num_units_prev_layer))
 
                 # w initialization below is following the recommendation on http://cs231n.github.io/neural-networks-2/
                 # min 100 to ensure that weights are small when the number of units is a few.
@@ -379,7 +385,7 @@ class NeuralNetwork():
         bias_parameter: WeightParameter
             Contains parameters to initialize layer biases
         """
-
+        self.mode = NeuralNetwork.MODE_FIT
         self.model = model
         self.optimizer = optimizer
         self.optimizer_settings = optimizer_settings
@@ -440,6 +446,7 @@ class NeuralNetwork():
         """
 
         this_layer = self.model.layers[current_layer_index]
+        prev_layer = self.model.layers[current_layer_index-1]
 
         if this_layer.layer_type == LayerType.CONV:
             kernel = self.weight[current_layer_index]
@@ -451,7 +458,23 @@ class NeuralNetwork():
         else:  # Dense layer
             # Affine transformation
             # z = a_prev.dot(self.weight[current_layer_index]) + self.bias[current_layer_index]
-            z = forward_prop_affine_transform(a_prev, self.weight[current_layer_index], self.bias[current_layer_index])
+
+            if prev_layer.dropout != 1.0:
+                if self.mode == NeuralNetwork.MODE_FIT:
+                    num_activation_prev = self.dropout_vector[current_layer_index-1].shape[0]
+                    dropout = prev_layer.dropout
+                    num_units_to_drop = int(num_activation_prev * (1-dropout))
+                    index_of_units_to_drop = np.random.choice(num_activation_prev, num_units_to_drop)
+                    dropout_vector = np.ones((num_activation_prev)) # reset to 1 first
+                    dropout_vector[index_of_units_to_drop] = 0
+                    self.dropout_vector[current_layer_index - 1] = dropout_vector
+                    a_prev_tilda = a_prev * self.dropout_vector[current_layer_index - 1]
+                else: # if predict, use all nodes but multiply by the dropout
+                    a_prev_tilda = a_prev * prev_layer.dropout
+            else:
+                a_prev_tilda = a_prev
+
+            z = forward_prop_affine_transform(a_prev_tilda, self.weight[current_layer_index], self.bias[current_layer_index])
 
         self.z[current_layer_index] = z
 
@@ -487,6 +510,7 @@ class NeuralNetwork():
         out: ndarray
             Predicted values
         """
+        self.mode = NeuralNetwork.MODE_PREDICT
         return self._forward_prop(x)
 
     def predict_intermediate(self, x, output_layer_index):
@@ -561,6 +585,7 @@ class NeuralNetwork():
             above_layer = None
 
         this_layer = self.model.layers[layer_index]
+        prev_layer = self.model.layers[layer_index-1]
 
         if this_layer.layer_type == LayerType.CONV:
             if above_layer is None:
@@ -607,6 +632,11 @@ class NeuralNetwork():
             pz_pa_prev = self.partial_z_wrt_partial_a_prev(layer_index)
 
             cumulative_derivative_to_a_prev = cumulative_derivative_to_z.dot(pz_pa_prev.T)
+
+            if prev_layer.dropout != 1.0:
+                dropout_vector = self.dropout_vector[layer_index - 1]
+                cumulative_derivative_to_a_prev *= dropout_vector
+
         else:  # if Conv
             """
             See refer to my documentation to see how these calculations are derived: 
@@ -783,6 +813,7 @@ class NeuralNetwork():
 
 
         self._dataset_size = x.shape[0]
+        self.mode = NeuralNetwork.MODE_FIT
 
         # check to see if we should use layers from other object
         if self.use_layer_from is not None:
