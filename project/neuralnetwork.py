@@ -515,7 +515,7 @@ class NeuralNetwork():
         x: ndarray
             Input
         y: ndarray
-            Observations
+            Ground-truth
         y_hat: ndarray
             Predicted values
 
@@ -737,7 +737,7 @@ class NeuralNetwork():
         x: ndarray
             Input
         y: ndarray
-            Observations
+            Ground-truth
         epochs: int
             Number of epochs to iterate
         verbose: bool
@@ -864,7 +864,7 @@ class NeuralNetwork():
         Parameters
         ----------
         y: ndarray
-            Observations
+            Ground-truth
         y_hat: ndarray
             Predicted values
 
